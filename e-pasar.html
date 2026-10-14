@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E-Pasar — Toko Online Sederhana | Proyek Tengah Semester</title>
+  <meta name="description" content="E-Pasar: aplikasi web e-commerce sederhana (HTML + CSS murni + Vanilla JavaScript) dengan fitur sorting dan searching produk." />
+
+  <style>
+  /* ==========================================================================
+     E-PASAR — BAGIAN CSS (CSS murni / tanpa framework)
+     Tema  : Putih & Hijau (terinspirasi Tokopedia)
+     Gaya  : Minimalis, Clean, Modern, Responsif
+     ========================================================================== */
+
+  /* ----- 1.0 Ikon SVG (memakai sprite <symbol> + <use>) -----
+     Semua ikon antarmuka memakai SVG garis (stroke) tipis 1.8px dan warna
+     currentColor, sehingga tampil minimalis, tajam di semua ukuran layar,
+     serta otomatis mengikuti warna teks tombol/kartu. */
+  .sprite{position:absolute;width:0;height:0;overflow:hidden}          /* hanya wadah definisi ikon */
+  .ikon{width:1.15em;height:1.15em;flex:0 0 auto;display:inline-block;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .ikon--sm{width:.95em;height:.95em}
+  .ikon--btn{width:15px;height:15px}
+  .ikon--nav{width:17px;height:17px}
+  .ikon--brand{width:20px;height:20px}
+  .ikon--xl{width:42px;height:42px;color:var(--hijau);opacity:.8}
+  .ikon--bintang{width:12px;height:12px;color:var(--kuning)}
+  .ikon--lokasi{width:11px;height:11px;color:#9aa1ac;vertical-align:-.1em}
+  .ikon--chev{width:13px;height:13px;color:var(--hijau);transition:transform .15s}
+
+  /* ----- 1.1 Variabel global (warna, ukuran, font) ----- */
+  :root{
+    --hijau:#03ac0e;          /* warna utama */
+    --hijau-tua:#02920c;      /* hover */
+    --hijau-gelap:#017a0a;    /* teks hijau tua */
+    --hijau-muda:#eaf7ea;     /* background aksen */
+    --teks:#212121;
+    --teks-lembut:#6d7588;
+    --garis:#e6e8eb;
+    --putih:#ffffff;
+    --latar:#f7f8fa;
+    --kuning:#ffb400;
+    --merah:#e53935;
+    --radius:12px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+    --shadow-md:0 8px 22px rgba(16,24,40,.10);
+    --font:"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Consolas,"Courier New",monospace;
+  }
+
+  /* ----- 1.2 Reset dasar ----- */
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;font-family:var(--font);font-size:14px;line-height:1.5;
+    color:var(--teks);background:var(--latar);-webkit-font-smoothing:antialiased;
+  }
+  img{display:block;max-width:100%}
+  button{font-family:inherit}
+  :focus-visible{outline:3px solid var(--hijau-muda);outline-offset:2px}
+  .container{width:100%;max-width:1200px;margin:0 auto;padding:0 16px}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* ----- 1.3 Header / Navbar (sticky) ----- */
+  .header{position:sticky;top:0;z-index:40;background:var(--putih);border-bottom:1px solid var(--garis);box-shadow:0 1px 10px rgba(16,24,40,.04)}
+  .header__inner{display:flex;align-items:center;gap:14px;padding:12px 16px}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--teks);flex:0 0 auto}
+  .brand__logo{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--hijau-muda);color:var(--hijau-gelap);line-height:1}
+  .brand__text{font-size:20px;font-weight:800;letter-spacing:-.5px}
+  .brand__text span{color:var(--hijau)}
+
+  /* Kotak pencarian */
+  .search{flex:1 1 auto;display:flex;align-items:center;gap:8px;max-width:620px;background:var(--putih);border:1px solid var(--garis);border-radius:10px;padding:4px 6px 4px 12px;transition:.15s}
+  .search:focus-within{border-color:var(--hijau);box-shadow:0 0 0 3px var(--hijau-muda)}
+  .search__icon{display:grid;place-items:center;color:var(--teks-lembut);opacity:.85}
+  .search__input{flex:1 1 auto;min-width:60px;border:0;outline:0;background:transparent;font-family:inherit;font-size:14px;padding:9px 0;color:var(--teks)}
+  .search__clear{display:none;place-items:center;border:0;background:transparent;color:var(--teks-lembut);cursor:pointer;padding:4px 6px;border-radius:6px;line-height:0}
+  .search__clear:hover{background:#f1f3f5;color:var(--teks)}
+  .search__clear.is-show{display:grid}
+
+  /* Tombol keranjang di navbar */
+  .cart-btn{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--putih);border:1px solid var(--garis);color:var(--hijau-gelap);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+  .cart-btn:hover{background:#f1f3f5;border-color:#bfe3bf}
+  .cart-btn__badge{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--merah);color:var(--putih);font-size:11px;font-weight:700;display:grid;place-items:center}
+
+  /* ----- 1.4 Tombol (button) ----- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+  .btn--hijau{background:var(--hijau);border-color:var(--hijau);color:var(--putih)}
+  .btn--hijau:hover{background:var(--hijau-tua);border-color:var(--hijau-tua)}
+  .btn--block{width:100%}
+  .btn--sm{padding:6px 12px;font-size:12px}
+  .btn--ghost{background:var(--putih);border-color:var(--garis);color:var(--teks-lembut)}
+  .btn--ghost:hover{border-color:var(--hijau);color:var(--hijau-gelap)}
+  .btn:disabled{background:#eceff3;border-color:#eceff3;color:#a6adb7;cursor:not-allowed}
+  .btn:disabled:hover{background:#eceff3;border-color:#eceff3}
+  /* ----- 2.1 Toolbar filter & sorting ----- */
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 16px 4px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--putih);border:1px solid var(--garis);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--teks-lembut);cursor:pointer;transition:.15s}
+  .chip:hover{border-color:#bfe3bf;color:var(--hijau-gelap)}
+  .chip.is-active{background:var(--hijau);border-color:var(--hijau);color:var(--putih)}
+  .toolbar__right{display:flex;align-items:center;gap:8px}
+  .select-wrap{display:flex;align-items:center;gap:8px;background:var(--putih);border:1px solid var(--garis);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--teks-lembut);font-weight:600}
+  .select-wrap .ikon{color:var(--teks-lembut)}
+  .select-wrap select{border:0;outline:0;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--teks);cursor:pointer}
+
+  /* Info jumlah hasil (pencarian / filter) */
+  .info-hasil{margin:10px 0 14px;font-size:12.5px;color:var(--teks-lembut)}
+  .info-hasil b{color:var(--hijau-gelap)}
+  .petunjuk-log{margin:0 0 14px;font-size:12px;color:#9aa1ac}
+  .petunjuk-log .ikon{color:#d9a520}
+  .petunjuk-log kbd{background:#fff;border:1px solid var(--garis);border-bottom-width:2px;border-radius:6px;padding:1px 5px;font-family:var(--mono);font-size:11px;color:var(--teks-lembut)}
+
+  /* ----- 2.2 Grid produk (mirip Tokopedia) ----- */
+  main{padding-bottom:28px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
+  .card{position:relative;display:flex;flex-direction:column;background:var(--putih);border:1px solid var(--garis);border-radius:var(--radius);overflow:hidden;transition:transform .18s,box-shadow .18s,border-color .18s}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:#d6ecd8}
+  .card__media{position:relative;aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden}
+  .card__media img{width:100%;height:100%;object-fit:cover}
+  .card__emoji{font-size:58px;line-height:1;filter:drop-shadow(0 5px 9px rgba(0,0,0,.12))}
+  .card__kat{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.94);color:var(--hijau-gelap);border-radius:999px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+  .card__body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1 1 auto}
+  .card__title{margin:0;font-size:13.5px;font-weight:600;line-height:1.35;min-height:37px;color:var(--teks);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card__price{margin:0;font-size:16px;font-weight:800;color:var(--hijau)}   /* harga berwarna hijau */
+  .card__meta{margin:0;display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--teks-lembut)}
+  .rating{display:inline-flex;align-items:center;gap:3px;font-weight:700;color:#8a6d00}
+  .rating__bintang{display:inline-flex;align-items:center;color:var(--kuning)}
+  .rating__nilai{font-weight:700}
+  .stok-habis{font-weight:800;color:var(--merah)}
+  .card__loc{margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#9aa1ac}
+  .card__body .btn{margin-top:auto}
+  .card--habis{opacity:.72}
+  .kosong{text-align:center;padding:56px 16px;color:var(--teks-lembut);background:var(--putih);border:1px dashed var(--garis);border-radius:var(--radius)}
+  .kosong__ikon{display:grid;place-items:center;margin-bottom:12px}
+
+  /* ----- 3.1 Keranjang belanja (drawer dari kanan) ----- */
+  .overlay{position:fixed;inset:0;z-index:45;background:rgba(15,26,18,.45);opacity:0;visibility:hidden;transition:.2s}
+  .overlay.is-open{opacity:1;visibility:visible}
+  .cart{position:fixed;top:0;right:0;z-index:50;display:flex;flex-direction:column;width:380px;max-width:92vw;height:100%;background:var(--putih);box-shadow:-8px 0 26px rgba(16,24,40,.14);transform:translateX(105%);transition:transform .25s ease}
+  .cart.is-open{transform:none}
+  .cart__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--garis)}
+  .cart__head h2{margin:0;font-size:16px;display:flex;align-items:center;gap:8px}
+  .cart__head h2 .ikon{width:17px;height:17px;color:var(--hijau)}
+  .cart__close{display:grid;place-items:center;border:0;background:transparent;color:var(--teks-lembut);cursor:pointer;padding:5px 7px;border-radius:8px;line-height:0}
+  .cart__close:hover{background:#f1f3f5;color:var(--teks)}
+  .cart__body{flex:1 1 auto;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .cart__foot{border-top:1px solid var(--garis);background:#fbfdfb;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .cart__total{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--teks-lembut)}
+  .cart__total strong{font-size:18px;color:var(--hijau)}
+  .cart-kosong{margin:0;padding:44px 0;text-align:center;color:var(--teks-lembut);font-size:13px}
+  .item-cart{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--garis);border-radius:10px;padding:10px}
+  .item-cart__thumb{flex:0 0 auto;display:grid;place-items:center;width:48px;height:48px;border-radius:9px;font-size:24px}
+  .item-cart__info{flex:1 1 auto;min-width:0}
+  .item-cart__nama{margin:0 0 2px;font-size:12.5px;font-weight:700;line-height:1.3}
+  .item-cart__harga{margin:0;font-size:12px;font-weight:700;color:var(--hijau)}
+  .item-cart__aksi{display:flex;align-items:center;gap:6px;margin-top:8px}
+  .qty-btn{display:grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid var(--garis);border-radius:7px;background:var(--putih);color:var(--teks);cursor:pointer}
+  .qty-btn:hover{border-color:var(--hijau);color:var(--hijau-gelap)}
+  .qty-val{min-width:22px;text-align:center;font-size:13px;font-weight:700}
+  .item-cart__hapus{display:inline-flex;align-items:center;gap:4px;margin-left:auto;border:0;background:transparent;color:var(--merah);font-size:11.5px;font-weight:700;cursor:pointer}
+
+  /* ----- 3.2 Notifikasi (toast) ----- */
+  .toast-wrap{position:fixed;left:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:320px}
+  .toast{display:flex;align-items:flex-start;gap:8px;background:#0f1a12;color:#fff;border-left:4px solid var(--hijau);border-radius:10px;padding:11px 14px;font-size:12.5px;font-weight:600;box-shadow:var(--shadow-md);animation:toast-masuk .2s ease}
+  .toast .ikon{width:15px;height:15px;margin-top:1px;color:#7bf58f}
+  .toast--warn{border-left-color:var(--kuning)}
+  .toast--warn .ikon{color:var(--kuning)}
+  .toast--error{border-left-color:var(--merah)}
+  .toast--error .ikon{color:#ff8a8a}
+  .toast--sukses{border-left-color:var(--hijau)}
+  @keyframes toast-masuk{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ----- 3.3 Panel Log (console mini untuk sorting & searching) ----- */
+  .log-section{padding-bottom:28px}
+  .log-card{background:var(--putih);border:1px solid var(--garis);border-radius:var(--radius);overflow:hidden}
+  .log-card__head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--garis)}
+  .log-card__head h2{margin:0;font-size:15px;display:flex;align-items:center;gap:7px}
+  .log-card__head h2 .ikon{width:16px;height:16px;color:var(--hijau)}
+  .log-card__act{display:flex;gap:8px}
+  .log-card__demo{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--garis);background:#f7fcf7}
+  .log-card__demo input{flex:1 1 220px;border:1px solid var(--garis);border-radius:9px;padding:8px 12px;font-family:inherit;font-size:13px;outline:0}
+  .log-card__demo input:focus{border-color:var(--hijau);box-shadow:0 0 0 3px var(--hijau-muda)}
+  .log{background:#0f1a12;color:#c9f7cd;font-family:var(--mono);font-size:12px;line-height:1.7;padding:12px 14px;max-height:240px;overflow-y:auto}
+  .log__item{padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.07);white-space:pre-wrap;word-break:break-word}
+  .log__waktu{opacity:.5;margin-right:6px}
+  .log__item--sort{color:#ffe08a}
+  .log__item--search{color:#7fd4ff}
+  .log__item--success{color:#7bf58f}
+  .log__item--warn{color:#ffb37a}
+  .log__item--error{color:#ff8a8a}
+
+  /* ----- 3.4 Bagian penjelasan (dokumentasi proyek) ----- */
+  .penjelasan{padding-bottom:34px}
+  .penjelasan h2{font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .penjelasan h2 .ikon{width:18px;height:18px;color:var(--hijau)}
+  .penjelasan p.deskripsi{margin:0 0 16px;color:var(--teks-lembut);font-size:13px}
+  details.doc{background:var(--putih);border:1px solid var(--garis);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+  details.doc summary{display:flex;align-items:center;gap:8px;padding:14px 16px;font-size:14px;font-weight:700;cursor:pointer;list-style:none}
+  details.doc summary::-webkit-details-marker{display:none}
+  details.doc summary:hover{color:var(--hijau-gelap)}
+  details.doc[open] .ikon--chev{transform:rotate(90deg)}
+  details.doc[open] summary{border-bottom:1px solid var(--garis)}
+  .doc__body{padding:14px 18px 18px;font-size:13px;color:#41474f}
+  .doc__body ul{margin:8px 0;padding-left:20px}
+  .doc__body li{margin-bottom:6px}
+  code{font-family:var(--mono);font-size:12px;background:var(--hijau-muda);color:var(--hijau-gelap);padding:1px 6px;border-radius:6px}
+  pre{margin:10px 0;background:#0f1a12;border-radius:9px;padding:12px 14px;overflow-x:auto}
+  pre code{background:transparent;color:#c9f7cd;font-size:11.5px;line-height:1.6;padding:0}
+
+  /* ----- 3.5 Footer ----- */
+  .footer{border-top:1px solid var(--garis);background:var(--putih);padding:20px 16px;text-align:center;color:var(--teks-lembut);font-size:12.5px}
+  .footer b{color:var(--hijau-gelap)}
+
+  /* ==========================================================================
+     4. RESPONSIF — layout menyesuaikan ukuran layar (mobile, tablet, desktop)
+     ========================================================================== */
+  @media (max-width:900px){
+    .brand__text{display:none}
+  }
+  @media (max-width:720px){
+    .header__inner{flex-wrap:wrap;gap:10px}
+    .search{order:3;flex:1 1 100%;max-width:none}
+    .cart-btn__teks{display:none}
+    .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+    .card__emoji{font-size:46px}
+    .toolbar{padding:12px 16px 4px}
+    .log-card__head h2{font-size:14px}
+    .toast-wrap{left:12px;right:12px;max-width:none}
+  }
+  @media (max-width:380px){
+    .card__emoji{font-size:38px}
+    .card__price{font-size:14.5px}
+  }
+  </style>
+</head>
+
+<body>
+
+<!-- ==========================================================================
+     SPRITE IKON SVG — definisi seluruh ikon antarmuka (bukan gambar produk).
+     Dibuat sekali di sini, lalu dipanggil dengan:
+         <svg class="ikon"><use href="#ikon-cari"></use></svg>
+     Hampir semua ikon berupa garis (stroke) tipis 1.8px; khusus ikon LOGO toko
+     berupa ikon isian (fill). Semuanya memakai currentColor, jadi otomatis
+     mengikuti warna teks & tampil rapi di semua ukuran.
+     (Emoji pada kartu produk tetap dipakai sebagai "foto" produk.)
+     Catatan: ikon LOGO toko (#ikon-logo) dan ikon KERANJANG belanja
+     (#ikon-keranjang) adalah dua ikon yang berbeda. Ikon TAS (#ikon-tas)
+     khusus dipakai tombol "Beli" pada kartu produk.
+     Dibuat oleh: ikonSvg() pada JavaScript tampilan (bagian DOM).
+     ========================================================================== -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <!-- LOGO toko — hanya untuk brand/logo di navbar. Ikon isian (fill) yang
+       memakai currentColor, jadi otomatis berwarna hijau sesuai .brand__logo.
+       Bagian utama diberi opacity .5 sebagai aksen, persis seperti aslinya. -->
+  <symbol id="ikon-logo" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" opacity=".5" d="M4.0828 10.8943C4.52171 8.55339 4.74117 7.38295 5.57434 6.69147C6.40752 6 7.59835 6 9.98003 6H14.0209C16.4026 6 17.5934 6 18.4266 6.69147C19.2598 7.38295 19.4792 8.55339 19.9181 10.8943L20.6681 14.8943C21.2853 18.186 21.5939 19.8318 20.6942 20.9159C19.7945 22 18.12 22 14.7709 22H9.23003C5.88097 22 4.20644 22 3.30672 20.9159C2.40701 19.8318 2.7156 18.186 3.3328 14.8943L4.0828 10.8943Z"/><path fill="currentColor" stroke="none" d="M9.75 5C9.75 3.75736 10.7574 2.75 12 2.75C13.2426 2.75 14.25 3.75736 14.25 5V6C14.25 5.99999 14.25 6.00001 14.25 6C14.816 6.00018 15.3119 6.00174 15.7499 6.01488C15.75 6.00993 15.75 6.00497 15.75 6V5C15.75 2.92893 14.0711 1.25 12 1.25C9.92893 1.25 8.25 2.92893 8.25 5V6C8.25 6.00498 8.25005 6.00995 8.25015 6.01491C8.68814 6.00175 9.18397 6.00021 9.75 6.00002C9.75 6.00002 9.75 6.00003 9.75 6.00002V5Z"/><path fill="currentColor" stroke="none" d="M8.26032 10.8768C8.32842 10.4682 8.71484 10.1922 9.12342 10.2603C9.53199 10.3284 9.80801 10.7148 9.73991 11.1234L8.73991 17.1234C8.67182 17.532 8.2854 17.808 7.87682 17.7399C7.46824 17.6718 7.19223 17.2854 7.26032 16.8768L8.26032 10.8768Z"/><path fill="currentColor" stroke="none" d="M14.8771 10.2603C15.2856 10.1922 15.672 10.4682 15.7401 10.8768L16.7401 16.8768C16.8082 17.2854 16.5322 17.6718 16.1236 17.7399C15.7151 17.808 15.3287 17.532 15.2606 17.1234L14.2606 11.1234C14.1925 10.7148 14.4685 10.3284 14.8771 10.2603Z"/></symbol>
+  <!-- KERANJANG belanja — tombol keranjang di navbar, judul panel keranjang,
+       tombol Checkout, dan petunjuk keranjang kosong. Bergaya garis (stroke)
+       seperti ikon lain sehingga warnanya ikut currentColor. -->
+  <symbol id="ikon-keranjang" viewBox="0 0 24 24"><path d="M3.86376 16.4552C3.00581 13.0234 2.57684 11.3075 3.47767 10.1538C4.3785 9 6.14721 9 9.68462 9H14.3153C17.8527 9 19.6214 9 20.5222 10.1538C21.4231 11.3075 20.9941 13.0234 20.1362 16.4552C19.5905 18.6379 19.3176 19.7292 18.5039 20.3646C17.6901 21 16.5652 21 14.3153 21H9.68462C7.43476 21 6.30983 21 5.49605 20.3646C4.68227 19.7292 4.40943 18.6379 3.86376 16.4552Z"/><path d="M19.5 9.5L18.7896 6.89465C18.5157 5.89005 18.3787 5.38775 18.0978 5.00946C17.818 4.63273 17.4378 4.34234 17.0008 4.17152C16.5619 4 16.0413 4 15 4M4.5 9.5L5.2104 6.89465C5.48432 5.89005 5.62128 5.38775 5.90221 5.00946C6.18199 4.63273 6.56216 4.34234 6.99922 4.17152C7.43808 4 7.95872 4 9 4"/><path d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4C15 4.55228 14.5523 5 14 5H10C9.44772 5 9 4.55228 9 4Z"/><path d="M8 13V17"/><path d="M16 13V17"/><path d="M12 13V17"/></symbol>
+  <!-- TAS belanja — dipakai tombol "Beli" pada kartu produk. -->
+  <symbol id="ikon-tas" viewBox="0 0 24 24"><path d="M6.3 8h11.4l-.9 12.1a1.6 1.6 0 0 1-1.6 1.5H8.8a1.6 1.6 0 0 1-1.6-1.5L6.3 8Z"/><path d="M9.3 8V6.4a2.7 2.7 0 0 1 5.4 0V8"/></symbol>
+  <symbol id="ikon-cari" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4"/><path d="M15.8 15.8 20.5 20.5"/></symbol>
+  <symbol id="ikon-tutup" viewBox="0 0 24 24"><path d="M6.4 6.4 17.6 17.6"/><path d="M17.6 6.4 6.4 17.6"/></symbol>
+  <symbol id="ikon-urutkan" viewBox="0 0 24 24"><path d="M8 4.5v15"/><path d="M8 4.5 5.2 7.6"/><path d="M8 4.5l2.8 3.1"/><path d="M16 19.5v-15"/><path d="M16 19.5l-2.8-3.1"/><path d="M16 19.5l2.8-3.1"/></symbol>
+  <symbol id="ikon-lampu" viewBox="0 0 24 24"><path d="M12 3.4a6.1 6.1 0 0 0-3.5 11.1V16h7v-1.5A6.1 6.1 0 0 0 12 3.4Z"/><path d="M9.6 18.4h4.8"/><path d="M10.5 21h3"/></symbol>
+  <symbol id="ikon-tak-ditemukan" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4"/><path d="M15.8 15.8 20.5 20.5"/><path d="M8.7 8.7 13.3 13.3"/><path d="M13.3 8.7 8.7 13.3"/></symbol>
+  <symbol id="ikon-aktivitas" viewBox="0 0 24 24"><rect x="3" y="4.6" width="18" height="12.8" rx="2"/><path d="M12 17.4v3.2"/><path d="M9 20.6h6"/><path d="M7.6 9.4 10 11.6l-2.4 2.2"/><path d="M12.6 13.4h4"/></symbol>
+  <symbol id="ikon-buku" viewBox="0 0 24 24"><path d="M12 7.2C10.2 5.8 7.9 5.2 4 5.2v12.6c3.9 0 6.2.6 8 2 1.8-1.4 4.1-2 8-2V5.2c-3.9 0-6.2.6-8 2Z"/><path d="M12 7.2v12.6"/></symbol>
+  <symbol id="ikon-centang" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.3 12.4 11 15l4.8-5.2"/></symbol>
+  <symbol id="ikon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.9h.01"/></symbol>
+  <symbol id="ikon-peringatan" viewBox="0 0 24 24"><path d="M12 4.4 21 19.2H3L12 4.4Z"/><path d="M12 10.2v4"/><path d="M12 16.9h.01"/></symbol>
+  <symbol id="ikon-gagal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M9.5 9.5 14.5 14.5"/><path d="M14.5 9.5 9.5 14.5"/></symbol>
+  <symbol id="ikon-tambah" viewBox="0 0 24 24"><path d="M12 5.2v13.6"/><path d="M5.2 12h13.6"/></symbol>
+  <symbol id="ikon-kurang" viewBox="0 0 24 24"><path d="M5.2 12h13.6"/></symbol>
+  <symbol id="ikon-hapus" viewBox="0 0 24 24"><path d="M4.5 7h15"/><path d="M9.3 7V4.8h5.4V7"/><path d="M6.3 7l.9 12.2h9.6L17.7 7"/><path d="M10.2 10.6v6"/><path d="M13.8 10.6v6"/></symbol>
+  <symbol id="ikon-lokasi" viewBox="0 0 24 24"><path d="M12 21.2s6-5.4 6-10.2a6 6 0 1 0-12 0c0 4.8 6 10.2 6 10.2Z"/><circle cx="12" cy="10.8" r="2.2"/></symbol>
+  <symbol id="ikon-bintang" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 3.6l2.6 5.2 5.8.9-4.2 4.1 1 5.7L12 16.9l-5.2 2.6 1-5.7L3.6 9.7l5.8-.9L12 3.6Z"/></symbol>
+  <symbol id="ikon-pointer" viewBox="0 0 24 24"><path d="M6 3.4 18.4 11l-5.1.8 2.7 5.5-2.4 1.2-2.7-5.5L7.2 16 6 3.4Z"/></symbol>
+  <symbol id="ikon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.4"/><circle cx="12" cy="12" r="2.4"/><path d="M12 2.6v3.2"/><path d="M12 18.2v3.2"/><path d="M2.6 12h3.2"/><path d="M18.2 12h3.2"/></symbol>
+  <symbol id="ikon-panah" viewBox="0 0 24 24"><path d="M9.4 5.6 15.8 12l-6.4 6.4"/></symbol>
+</svg>
+
+<!-- ==========================================================================
+     HEADER / NAVBAR  (logo, kotak pencarian, tombol keranjang)
+     ========================================================================== -->
+<header class="header">
+  <div class="header__inner container">
+    <a class="brand" href="#" aria-label="Beranda E-Pasar">
+      <span class="brand__logo" aria-hidden="true"><svg class="ikon ikon--brand"><use href="#ikon-logo"></use></svg></span>
+      <span class="brand__text">E-<span>Pasar</span></span>
+    </a>
+
+    <!-- FORM PENCARIAN PRODUK.
+         Pencarian live memakai sequential search (tanpa log),
+         tekan tombol "Cari" / Enter untuk menjalankan search + menampilkan log. -->
+    <form class="search" id="formCari" role="search">
+      <span class="search__icon" aria-hidden="true"><svg class="ikon ikon--nav"><use href="#ikon-cari"></use></svg></span>
+      <input class="search__input" id="inputCari" type="search" placeholder="Cari di E-Pasar, misal: laptop, kaos, blender..." autocomplete="off" aria-label="Cari produk" />
+      <button class="search__clear" id="btnBersihkan" type="button" title="Bersihkan pencarian" aria-label="Bersihkan pencarian"><svg class="ikon ikon--nav" aria-hidden="true"><use href="#ikon-tutup"></use></svg></button>
+      <button class="btn btn--hijau btn--sm" type="submit"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-cari"></use></svg>Cari</button>
+    </form>
+
+    <button class="cart-btn" id="btnKeranjang" type="button" aria-label="Buka keranjang belanja">
+      <svg class="ikon ikon--nav" aria-hidden="true"><use href="#ikon-keranjang"></use></svg>
+      <span class="cart-btn__teks">Keranjang</span>
+      <span class="cart-btn__badge" id="badgeKeranjang">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- ==========================================================================
+     AREA PRODUK
+     ========================================================================== -->
+<main class="container" id="kontenUtama">
+
+  <!-- Toolbar: filter kategori (chip) + pilihan pengurutan (sorting) -->
+  <section class="toolbar" aria-label="Filter dan urutan produk">
+    <div class="chips" id="chipsKategori" role="group" aria-label="Filter kategori"></div>
+    <div class="toolbar__right">
+      <label class="select-wrap" for="selectUrut">
+        <svg class="ikon ikon--nav" aria-hidden="true"><use href="#ikon-urutkan"></use></svg> Urutkan:
+        <select id="selectUrut" aria-label="Urutkan produk">
+          <option value="default">Default (Relevan)</option>
+          <option value="harga-asc">Harga: Termurah</option>
+          <option value="harga-desc">Harga: Termahal</option>
+          <option value="nama-asc">Nama: A - Z</option>
+          <option value="nama-desc">Nama: Z - A</option>
+          <option value="rating-desc">Rating: Tertinggi</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <!-- Info jumlah produk yang tampil + petunjuk log -->
+  <p class="info-hasil" id="infoHasil"></p>
+  <p class="petunjuk-log"><svg class="ikon ikon--sm" aria-hidden="true"><use href="#ikon-lampu"></use></svg> Tips: tekan <kbd>Enter</kbd> di kotak pencarian atau ubah pilihan "Urutkan" untuk melihat log proses <b>searching</b> &amp; <b>sorting</b> di panel log bawah.</p>
+
+  <!-- Grid produk (kartu produk dirender oleh JavaScript) -->
+  <div class="grid" id="gridProduk" aria-live="polite"></div>
+
+  <!-- Tampilan saat produk tidak ditemukan -->
+  <div class="kosong" id="pesanKosong" hidden>
+    <span class="kosong__ikon" aria-hidden="true"><svg class="ikon ikon--xl"><use href="#ikon-tak-ditemukan"></use></svg></span>
+    Produk tidak ditemukan. Coba kata kunci lain, misalnya <b>laptop</b>, <b>kaos</b>, atau <b>madu</b>.
+  </div>
+</main>
+
+<!-- ==========================================================================
+     PANEL LOG — menampilkan proses sorting & searching (mirip console)
+     ========================================================================== -->
+<section class="log-section container" aria-label="Log aktivitas sorting dan searching">
+  <div class="log-card">
+    <div class="log-card__head">
+      <h2><svg class="ikon" aria-hidden="true"><use href="#ikon-aktivitas"></use></svg> Log Aktivitas — Sorting &amp; Searching</h2>
+      <div class="log-card__act">
+        <button class="btn btn--ghost btn--sm" id="btnDemoPointer" type="button" title="Bukti bahwa object di JavaScript dioper by reference"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-pointer"></use></svg>Demo Pointer</button>
+        <button class="btn btn--ghost btn--sm" id="btnBersihkanLog" type="button"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-hapus"></use></svg>Bersihkan Log</button>
+      </div>
+    </div>
+
+    <!-- Demo Binary Search (butuh nama produk yang PERSIS sama) -->
+    <div class="log-card__demo">
+      <input id="inputBinary" type="text" list="daftarNamaProduk" placeholder="Demo Binary Search: ketik nama produk persis (mis. Laptop ASUS VivoBook 14)..." aria-label="Nama produk untuk binary search" />
+      <datalist id="daftarNamaProduk"></datalist>
+      <button class="btn btn--hijau btn--sm" id="btnBinary" type="button"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-target"></use></svg>Jalankan Binary Search</button>
+    </div>
+
+    <div class="log" id="logPanel" role="log" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     KERANJANG BELANJA (drawer) + OVERLAY
+     ========================================================================== -->
+<div class="overlay" id="overlay"></div>
+
+<aside class="cart" id="keranjangPanel" aria-hidden="true" aria-label="Keranjang belanja">
+  <div class="cart__head">
+    <h2><svg class="ikon" aria-hidden="true"><use href="#ikon-keranjang"></use></svg> Keranjang</h2>
+    <button class="cart__close" id="btnTutupKeranjang" type="button" aria-label="Tutup keranjang"><svg class="ikon ikon--nav" aria-hidden="true"><use href="#ikon-tutup"></use></svg></button>
+  </div>
+  <div class="cart__body" id="cartBody"></div>
+  <div class="cart__foot">
+    <div class="cart__total">
+      <span>Total bayar</span>
+      <strong id="cartTotal">Rp0</strong>
+    </div>
+    <button class="btn btn--hijau btn--block" id="btnCheckout" type="button"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-keranjang"></use></svg>Checkout Sekarang</button>
+  </div>
+</aside>
+
+<!-- Wadah notifikasi (toast) -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ==========================================================================
+     FOOTER
+     ========================================================================== -->
+<footer class="footer">
+  <div class="container">
+    <b>E-Pasar</b> — Proyek Tengah Semester · Dibuat dengan HTML, CSS murni &amp; Vanilla JavaScript.
+  </div>
+</footer>
+
+<!-- ==========================================================================
+     BAGIAN PENJELASAN (DOKUMENTASI) — letak implementasi struktur data,
+     fungsi sorting & searching, serta cara menjalankan file.
+     ========================================================================== -->
+<section class="penjelasan container">
+  <h2><svg class="ikon" aria-hidden="true"><use href="#ikon-buku"></use></svg> Penjelasan Kode &amp; Cara Menjalankan</h2>
+  <p class="deskripsi">Klik setiap bagian di bawah untuk membuka penjelasannya.</p>
+
+  <!-- 1. ARRAY, STRUCT, POINTER -->
+  <details class="doc" open>
+    <summary><svg class="ikon ikon--chev" aria-hidden="true"><use href="#ikon-panah"></use></svg> 1. Implementasi Array, Struct (Object Literal), dan Pointer (Reference)</summary>
+    <div class="doc__body">
+      <ul>
+        <li>
+          <b>ARRAY</b> — daftar produk disimpan pada variabel <code>daftarProduk</code>
+          (lihat komentar <code>1.1 STRUCT + ARRAY</code> di dalam SCRIPT 1).
+          Array juga dipakai untuk <code>keranjang</code> (daftar belanja) dan
+          <code>daftarProduk</code> hasil filter/sorting.
+        </li>
+        <li>
+          <b>STRUCT (Object Literal)</b> — setiap produk adalah satu object dengan
+          properti wajib: <code>id</code>, <code>nama</code>, <code>harga</code>,
+          <code>kategori</code>, <code>stok</code>, <code>rating</code>
+          (ditambah <code>emoji</code> dan <code>lokasi</code> untuk tampilan kartu).
+        </li>
+        <li>
+          <b>POINTER (Reference)</b> — fungsi yang memanipulasi data <i>by reference</i>:
+          <ul>
+            <li><code>cariProdukById(id)</code> → memakai <code>Array.find()</code> yang mengembalikan
+                <b>referensi</b> ke object di dalam array (bukan salinan).</li>
+            <li><code>tambahKeKeranjang(keranjangRef, produkRef, jumlah)</code> → parameter berupa
+                referensi, sehingga <code>produkRef.stok</code> yang diubah langsung mengubah
+                stok produk pada <code>daftarProduk</code>.</li>
+            <li><code>ubahJumlahItem(idProduk, selisih)</code> dan <code>hapusItemKeranjang(idProduk)</code>
+                → mengubah stok &amp; item keranjang lewat referensi object yang sama.</li>
+            <li><code>hitungUlangSubtotal(keranjangRef)</code> → menghitung ulang subtotal tiap item
+                dengan memutasi object item (by reference) dan mengembalikan total.</li>
+            <li><code>demoPointer()</code> (tombol <b>Demo Pointer</b> di panel log) → bukti bahwa
+                <code>const penunjuk = objekAsli;</code> bukan menyalin data, tetapi menunjuk object yang sama.</li>
+          </ul>
+        </li>
+      </ul>
+      <pre><code>// STRUCT (object literal) di dalam ARRAY
+const daftarProduk = [
+  { id: 1, nama: 'Laptop ASUS VivoBook 14', harga: 7499000,
+    kategori: 'Elektronik', stok: 8, rating: 4.7, emoji: '💻', lokasi: 'Jakarta Pusat' },
+  // ... 26 produk lainnya (total 27 produk)
+];
+
+// POINTER: perubahan lewat referensi langsung mengubah data asli
+const produk = daftarProduk.find((p) =&gt; p.id === 1);   // referensi, bukan salinan
+produk.stok = produk.stok - 1;                           // stok di daftarProduk ikut berubah</code></pre>
+    </div>
+  </details>
+
+  <!-- 2. SORTING -->
+  <details class="doc">
+    <summary><svg class="ikon ikon--chev" aria-hidden="true"><use href="#ikon-panah"></use></svg> 2. Fitur Sorting — letak fungsinya</summary>
+    <div class="doc__body">
+      <ul>
+        <li><code>KOMPARATOR</code> (SCRIPT 1) — kumpulan fungsi pembanding: harga naik/turun, nama A-Z/Z-A
+            (memakai <code>localeCompare</code> agar urutan alfabet benar), dan rating tertinggi.</li>
+        <li><code>urutkanProduk(daftar, opsi, denganLog)</code> — fungsi utama sorting. Data disalin lebih dulu
+            (<code>daftar.slice()</code>) agar urutan array asli tidak rusak, lalu diurutkan dengan
+            <code>Array.prototype.sort()</code>. Jumlah perbandingan dihitung untuk ditampilkan di log.</li>
+        <li><b>Trigger di UI:</b> dropdown <b>“Urutkan”</b> (<code>#selectUrut</code>) pada toolbar →
+            menampilkan log seperti <code>Sorting by Price Ascending (harga termurah → termahal) ... (27 produk)</code> dan
+            <code>Selesai: Sorting by Price Ascending ... ✔ 98 perbandingan • 0.05 ms</code>.
+            Semua log juga dikirim ke <i>console</i> browser.</li>
+      </ul>
+      <pre><code>const hasil = daftar.slice();                 // salinan array (data asli aman)
+hasil.sort((a, b) =&gt; a.harga - b.harga);      // ascending: termurah → termahal</code></pre>
+    </div>
+  </details>
+
+  <!-- 3. SEARCHING -->
+  <details class="doc">
+    <summary><svg class="ikon ikon--chev" aria-hidden="true"><use href="#ikon-panah"></use></svg> 3. Fitur Searching — letak fungsinya</summary>
+    <div class="doc__body">
+      <ul>
+        <li><b>a. Sequential / Linear Search</b> — <code>cariProdukSequential(daftar, kataKunci, denganLog)</code>.
+            Dipakai oleh kotak pencarian di navbar. Mendukung pencarian sebagian kata dan kata kunci lebih dari satu
+            (mis. <i>“laptop asus”</i>) serta ikut mencocokkan nama kategori.
+            Log contoh: <code>Searching for 'laptop' ... (sequential search)</code> lalu
+            <code>Found 1 items (sequential search • 27 perbandingan • 27 data)</code>.</li>
+        <li><b>b. Binary Search</b> — <code>cariProdukBinary(daftar, kataKunci, denganLog)</code>.
+            Data diurutkan berdasarkan nama lebih dulu (syarat mutlak binary search), lalu dicari dengan
+            membagi dua ruang pencarian. Butuh <b>nama yang persis sama</b>.
+            Diuji lewat tombol <b>“Jalankan Binary Search”</b> di panel log; log akan menampilkan
+            <b>setiap langkah</b> pembagian data (kiri/kanan/tengah), mis.
+            <code>Langkah 3: kiri=7 • kanan=13 • tengah=10 → "Kopi Arabika Gayo 250 gram" (kunci &lt; data → geser batas kanan)</code>,
+            sehingga jumlah perbandingannya terlihat jauh lebih sedikit dibanding sequential search.</li>
+        <li><b>Trigger di UI:</b> tekan <kbd>Enter</kbd>/tombol <b>Cari</b> pada kotak pencarian →
+            hasil ditampilkan pada grid + log pencarian muncul di panel log dan console.</li>
+      </ul>
+      <pre><code>// Sequential search: memeriksa data satu per satu (untuk 27 produk = maksimal 27 perbandingan)
+// Binary search    : maksimal ±log2(27) ≈ 5 perbandingan, tetapi nama harus persis</code></pre>
+    </div>
+  </details>
+
+  <!-- 4. CARA MENJALANKAN -->
+  <details class="doc">
+    <summary><svg class="ikon ikon--chev" aria-hidden="true"><use href="#ikon-panah"></use></svg> 4. Cara menjalankan file</summary>
+    <div class="doc__body">
+      <ul>
+        <li><b>Cara termudah:</b> simpan file <code>e-pasar.html</code>, lalu <b>klik dua kali</b> (double click)
+            file tersebut sehingga terbuka di browser (Chrome/Edge/Firefox). Tidak perlu instalasi apa pun,
+            karena CSS &amp; JavaScript sudah menyatu di dalam file ini (tanpa CDN/internet).</li>
+        <li><b>Via Visual Studio Code:</b> buka file <code>e-pasar.html</code>, klik kanan →
+            <i>Open with Live Server</i> (bila ekstensi Live Server terpasang), atau
+            <i>Open with Default Browser</i>.</li>
+        <li><b>Melihat log:</b> buka DevTools browser dengan <kbd>F12</kbd> → tab <b>Console</b>,
+            lalu lakukan pencarian/sorting. Log yang sama juga tampil pada panel
+            <b>“Log Aktivitas”</b> di bagian bawah halaman.</li>
+        <li><b>Tampilan &amp; ikon:</b> seluruh ikon antarmuka (kaca pembesar, keranjang, tombol tutup,
+            ikon urutkan, plus/minus, hapus, bintang rating, penunjuk lokasi, dsb.) memakai
+            <b>ikon SVG bergaya garis (stroke)</b> yang didefinisikan sekali dalam <i>sprite</i>
+            <code>&lt;symbol&gt;</code> di bagian atas <code>&lt;body&gt;</code>, lalu dipanggil dengan
+            <code>&lt;use href="#ikon-..."&gt;&lt;/use&gt;</code> melalui helper <code>ikonSvg()</code>
+            di bagian JavaScript tampilan. Ikon memakai <code>stroke="currentColor"</code> sehingga otomatis mengikuti warna
+            teks/tombol dan tetap tajam di segala ukuran layar (retina/HiDPI); emoji hanya dipakai sebagai
+            gambar produk pada kartu. Logo toko (<code>#ikon-logo</code>) dan ikon keranjang
+            (<code>#ikon-keranjang</code>) sengaja dibuat sebagai dua ikon yang berbeda, sedangkan ikon
+            tas (<code>#ikon-tas</code>) khusus dipakai tombol <b>Beli</b> pada kartu produk. Jadi
+            tampilan tetap <i>minimalis</i> dan tidak bergantung pada file gambar atau CDN.</li>
+        <li><b>Cara mencoba fitur:</b>
+          <ul>
+            <li>Ketik <i>laptop</i> di kotak pencarian lalu tekan <kbd>Enter</kbd> → lihat log searching.</li>
+            <li>Pilih <i>Harga: Termurah</i> pada dropdown Urutkan → lihat log sorting.</li>
+            <li>Klik <i>Beli</i> beberapa kali → stok berkurang (perubahan via referensi) dan keranjang bertambah.</li>
+            <li>Klik <i>Demo Pointer</i> → membuktikan object dioper <i>by reference</i>.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- ==========================================================================
+     SCRIPT 1 — DATA & LOGIKA
+     (Array, Struct/Object Literal, Pointer/Reference, Sorting, Searching)
+     ========================================================================== -->
+<script>
+/* ==========================================================================
+   E-PASAR — SCRIPT 1: DATA & LOGIKA
+   Bagian ini murni logika (tanpa DOM) supaya mudah diuji:
+   Array · Struct/Object Literal · Pointer/Reference · Sorting · Searching
+   ========================================================================== */
+'use strict';
+
+/* ==========================================================================
+   1.1 STRUCT (OBJECT LITERAL) + ARRAY
+   - ARRAY  : variabel `daftarProduk` di bawah ini adalah array berisi 27 produk.
+   - STRUCT : setiap produk adalah OBJECT LITERAL (mirip struct di C) dengan
+              properti: id, nama, harga, kategori, stok, rating
+              (+ emoji & lokasi hanya untuk keperluan tampilan kartu produk).
+   - Ingin memakai foto asli? Tambahkan properti `gambarUrl: 'namafile.jpg'`
+     pada produk; renderer akan otomatis memakai <img> tersebut.
+   ========================================================================== */
+const daftarProduk = [
+  /* ---------------- KATEGORI: ELEKTRONIK ---------------- */
+  { id: 1,  nama: 'Laptop ASUS VivoBook 14',          harga: 7499000, kategori: 'Elektronik',      stok: 8,   rating: 4.7, emoji: '💻', lokasi: 'Jakarta Pusat' },
+  { id: 2,  nama: 'Smartphone Samsung Galaxy A15',    harga: 2799000, kategori: 'Elektronik',      stok: 15,  rating: 4.6, emoji: '📱', lokasi: 'Jakarta Barat' },
+  { id: 3,  nama: 'Headphone Bluetooth JBL Tune 510BT',harga: 549000, kategori: 'Elektronik',      stok: 30,  rating: 4.5, emoji: '🎧', lokasi: 'Bandung' },
+  { id: 4,  nama: 'Mouse Wireless Logitech M331',     harga: 185000,  kategori: 'Elektronik',      stok: 42,  rating: 4.8, emoji: '🖱️', lokasi: 'Surabaya' },
+  { id: 5,  nama: 'Keyboard Mechanical Rexus K9',     harga: 320000,  kategori: 'Elektronik',      stok: 20,  rating: 4.4, emoji: '⌨️', lokasi: 'Tangerang' },
+  { id: 6,  nama: 'Power Bank Anker 20000mAh',        harga: 450000,  kategori: 'Elektronik',      stok: 25,  rating: 4.9, emoji: '🔋', lokasi: 'Jakarta Selatan' },
+  { id: 7,  nama: 'Smart TV LG 43 inch 4K',           harga: 4250000, kategori: 'Elektronik',      stok: 5,   rating: 4.3, emoji: '📺', lokasi: 'Bekasi' },
+  { id: 8,  nama: 'Kamera DSLR Canon EOS 2000D',      harga: 6100000, kategori: 'Elektronik',      stok: 3,   rating: 4.6, emoji: '📷', lokasi: 'Yogyakarta' },
+
+  /* ---------------- KATEGORI: PAKAIAN ---------------- */
+  { id: 9,  nama: 'Kaos Polos Cotton Combed 30s',     harga: 65000,   kategori: 'Pakaian',         stok: 100, rating: 4.7, emoji: '👕', lokasi: 'Bandung' },
+  { id: 10, nama: 'Kemeja Flanel Pria Lengan Panjang',harga: 149000,  kategori: 'Pakaian',         stok: 40,  rating: 4.5, emoji: '👔', lokasi: 'Jakarta Timur' },
+  { id: 11, nama: 'Jaket Hoodie Fleece Premium',      harga: 189000,  kategori: 'Pakaian',         stok: 35,  rating: 4.6, emoji: '🧥', lokasi: 'Bandung' },
+  { id: 12, nama: 'Celana Chino Slim Fit',            harga: 175000,  kategori: 'Pakaian',         stok: 28,  rating: 4.4, emoji: '👖', lokasi: 'Solo' },
+  { id: 13, nama: 'Sepatu Sneakers Putih Unisex',     harga: 329000,  kategori: 'Pakaian',         stok: 18,  rating: 4.8, emoji: '👟', lokasi: 'Tangerang' },
+
+  { id: 14, nama: 'Dress Wanita Casual Korea',        harga: 139000,  kategori: 'Pakaian',         stok: 22,  rating: 4.5, emoji: '👗', lokasi: 'Bandung' },
+
+  /* ---------------- KATEGORI: KEBUTUHAN RUMAH ---------------- */
+  { id: 15, nama: 'Rice Cooker Miyako 1.8 Liter',     harga: 285000,  kategori: 'Kebutuhan Rumah', stok: 12,  rating: 4.6, emoji: '🍚', lokasi: 'Semarang' },
+  { id: 16, nama: 'Blender Philips 2 Liter',          harga: 399000,  kategori: 'Kebutuhan Rumah', stok: 10,  rating: 4.7, emoji: '🥤', lokasi: 'Jakarta Utara' },
+  { id: 17, nama: 'Setrika Listrik Philips 350 Watt', harga: 219000,  kategori: 'Kebutuhan Rumah', stok: 16,  rating: 4.4, emoji: '♨️', lokasi: 'Surabaya' },
+  { id: 18, nama: 'Sapu Set + Tempat Sampah',         harga: 89000,   kategori: 'Kebutuhan Rumah', stok: 50,  rating: 4.3, emoji: '🧹', lokasi: 'Bekasi' },
+  { id: 19, nama: 'Lampu LED Smart 12 Watt',          harga: 75000,   kategori: 'Kebutuhan Rumah', stok: 60,  rating: 4.5, emoji: '💡', lokasi: 'Tangerang' },
+  { id: 20, nama: 'Rak Buku Minimalis 3 Tingkat',     harga: 245000,  kategori: 'Kebutuhan Rumah', stok: 9,   rating: 4.2, emoji: '🗄️', lokasi: 'Depok' },
+  { id: 21, nama: 'Panci Stainless 24 cm',            harga: 135000,  kategori: 'Kebutuhan Rumah', stok: 0,   rating: 4.1, emoji: '🍲', lokasi: 'Solo' },
+
+  /* ---------------- KATEGORI: KECANTIKAN ---------------- */
+  { id: 22, nama: 'Serum Vitamin C 20ml',             harga: 95000,   kategori: 'Kecantikan',      stok: 45,  rating: 4.9, emoji: '🧴', lokasi: 'Jakarta Pusat' },
+  { id: 23, nama: 'Lip Cream Matte Tahan Lama',       harga: 55000,   kategori: 'Kecantikan',      stok: 70,  rating: 4.6, emoji: '💄', lokasi: 'Bandung' },
+  { id: 24, nama: 'Sunscreen SPF 50 PA++++',          harga: 78000,   kategori: 'Kecantikan',      stok: 55,  rating: 4.8, emoji: '☀️', lokasi: 'Denpasar' },
+
+  /* ---------------- KATEGORI: MAKANAN ---------------- */
+  { id: 25, nama: 'Kopi Arabika Gayo 250 gram',       harga: 85000,   kategori: 'Makanan',         stok: 80,  rating: 4.9, emoji: '☕', lokasi: 'Aceh' },
+  { id: 26, nama: 'Madu Hutan Murni 500ml',           harga: 120000,  kategori: 'Makanan',         stok: 33,  rating: 4.7, emoji: '🍯', lokasi: 'Kalimantan' },
+  { id: 27, nama: 'Keripik Singkong Pedas 250 gram',  harga: 25000,   kategori: 'Makanan',         stok: 120, rating: 4.5, emoji: '🍟', lokasi: 'Malang' }
+];
+
+/* ==========================================================================
+   1.2 STATE APLIKASI (object literal penanda kondisi tampilan)
+   ========================================================================== */
+const state = {
+  kataKunci: '',      // kata kunci pencarian aktif
+  kategori: 'Semua',  // kategori terpilih pada chip filter
+  urutan: 'default',  // opsi sorting aktif
+  hasil: []           // ARRAY hasil filter + sorting yang sedang ditampilkan
+};
+
+/* ARRAY keranjang belanja.
+   Setiap elemen menyimpan REFERENSI (bukan salinan) ke object produk,
+   sehingga mengubah stok lewat keranjang otomatis mengubah data di daftarProduk. */
+const keranjang = [];
+
+/* ==========================================================================
+   1.3 UTILITAS UMUM
+   ========================================================================== */
+const WARNA_LOG = { info: '#03ac0e', sort: '#c9a227', search: '#1e88e5', success: '#03ac0e', warn: '#f59e0b', error: '#e53935' };
+
+const el = (id) => document.getElementById(id);
+const formatRupiah = (angka) => 'Rp' + Number(angka).toLocaleString('id-ID');
+
+/* Bandingkan dua nama secara alfabet (dipakai sorting & binary search agar konsisten) */
+const bandingkanNama = (a, b) => a.toLowerCase().localeCompare(b.toLowerCase(), 'id', { sensitivity: 'base' });
+
+/* Utilitas keamanan: mencegah karakter HTML dari data dianggap sebagai tag */
+function escapeHtml(teks) {
+  return String(teks).replace(/[&<>"']/g, (k) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[k]));
+}
+
+/* Waktu untuk prefix log */
+function waktuSekarang() {
+  const d = new Date();
+  const dua = (n) => String(n).padStart(2, '0');
+  return dua(d.getHours()) + ':' + dua(d.getMinutes()) + ':' + dua(d.getSeconds());
+}
+
+/* Tulis pesan log ke console browser DAN ke panel log di UI.
+   Fungsi ini menjaga dirinya sendiri bila `#logPanel` belum ada. */
+function log(pesan, tipe = 'info') {
+  console.log('%c[E-Pasar] ' + pesan, 'color:' + (WARNA_LOG[tipe] || WARNA_LOG.info) + ';font-weight:bold');
+  if (typeof document === 'undefined') return;
+  const panel = document.getElementById('logPanel');
+  if (!panel) return;
+  const baris = document.createElement('div');
+  baris.className = 'log__item log__item--' + tipe;
+  const waktu = document.createElement('span');
+  waktu.className = 'log__waktu';
+  waktu.textContent = '[' + waktuSekarang() + ']';
+  baris.appendChild(waktu);
+  baris.appendChild(document.createTextNode(pesan)); // textContent → aman dari XSS
+  panel.prepend(baris);
+  while (panel.children.length > 60) panel.removeChild(panel.lastElementChild);
+}
+
+/* ==========================================================================
+   2. POINTER (REFERENCE)
+   Di JavaScript, object & array dioper "by reference" (mirip pointer di C):
+   memodifikasi object di dalam fungsi akan mengubah object asli pemanggil.
+   Fungsi-fungsi di bawah ini adalah implementasi pointer tersebut.
+   ========================================================================== */
+
+/* Mengambil SATU object produk dari array.
+   Array.find() mengembalikan REFERENSI ke object di dalam array (bukan salinan),
+   jadi mengubah hasil kembaliannya = mengubah data asli di daftarProduk. */
+function cariProdukById(id) {
+  return daftarProduk.find((produk) => produk.id === id);
+}
+
+/* Jumlah semua barang (kuantitas) di keranjang */
+function jumlahItemKeranjang(keranjangRef) {
+  let total = 0;
+  for (const item of keranjangRef) total += item.jumlah;
+  return total;
+}
+
+/* Menghitung ulang subtotal SETIAP ITEM dengan cara memutasi object item
+   (by reference), lalu mengembalikan total belanja. */
+function hitungUlangSubtotal(keranjangRef) {
+  let total = 0;
+  keranjangRef.forEach((item) => {
+    item.subtotal = item.produk.harga * item.jumlah; // <- mutasi lewat referensi object item
+    total += item.subtotal;
+  });
+  return total;
+}
+
+/* Menambahkan produk ke keranjang.
+   - keranjangRef : ARRAY keranjang (dikirim by reference)
+   - produkRef    : OBJECT produk (dikirim by reference)
+   Pengurangan stok di sini LANGSUNG mengubah produk pada daftarProduk
+   karena produkRef menunjuk ke object yang sama. */
+function tambahKeKeranjang(keranjangRef, produkRef, jumlah = 1) {
+  if (!produkRef) { log('Produk tidak ditemukan.', 'error'); return false; }
+  if (produkRef.stok <= 0) { log('Stok "' + produkRef.nama + '" sudah habis.', 'warn'); return false; }
+  if (jumlah > produkRef.stok) { log('Stok "' + produkRef.nama + '" hanya ' + produkRef.stok + ' buah.', 'warn'); return false; }
+
+  produkRef.stok = produkRef.stok - jumlah; // POINTER: mutasi object asli
+
+  // Cari item keranjang dengan id produk yang sama
+  const item = keranjangRef.find((it) => it.produk.id === produkRef.id);
+  if (item) {
+    item.jumlah += jumlah;
+    item.subtotal = item.produk.harga * item.jumlah;
+  } else {
+    // Simpan REFERENSI produk (bukan salinan) ke dalam keranjang
+    keranjangRef.push({ produk: produkRef, jumlah: jumlah, subtotal: produkRef.harga * jumlah });
+  }
+
+  log('Keranjang +' + jumlah + ' "' + produkRef.nama + '" • stok sekarang ' + produkRef.stok + ' • total item ' + jumlahItemKeranjang(keranjangRef) + '.', 'success');
+  return true;
+}
+
+/* Menambah / mengurangi jumlah sebuah item keranjang.
+   selisih = +1 untuk tambah, -1 untuk kurangi. */
+function ubahJumlahItem(idProduk, selisih) {
+  const item = keranjang.find((it) => it.produk.id === idProduk); // REFERENSI ke item keranjang
+  if (!item) return false;
+
+  if (selisih > 0 && item.produk.stok < selisih) {
+    log('Stok "' + item.produk.nama + '" tidak mencukupi (sisa ' + item.produk.stok + ').', 'warn');
+    return false;
+  }
+
+  const jumlahBaru = item.jumlah + selisih;
+  if (jumlahBaru <= 0) return hapusItemKeranjang(idProduk);
+
+  item.produk.stok = item.produk.stok - selisih; // POINTER: stok produk ikut berubah
+  item.jumlah = jumlahBaru;
+  item.subtotal = item.produk.harga * item.jumlah;
+  log('Jumlah "' + item.produk.nama + '" → ' + item.jumlah + ' buah • stok produk ' + item.produk.stok + '.', 'info');
+  return true;
+}
+
+/* Menghapus satu item dari keranjang.
+   Stok produk dikembalikan ke semula (perubahan lewat referensi juga). */
+function hapusItemKeranjang(idProduk) {
+  const indeks = keranjang.findIndex((it) => it.produk.id === idProduk);
+  if (indeks === -1) return false;
+
+  const item = keranjang[indeks];                 // REFERENSI ke object item
+  item.produk.stok = item.produk.stok + item.jumlah; // kembalikan stok produk
+  keranjang.splice(indeks, 1);                    // hapus 1 elemen dari ARRAY
+  log('"' + item.produk.nama + '" dihapus dari keranjang • stok dikembalikan menjadi ' + item.produk.stok + '.', 'info');
+  return true;
+}
+
+/* Checkout: total dihitung ulang, lalu isi keranjang dikosongkan.
+   Perhatikan: `keranjang.length = 0` mengosongkan array ASLI (mutasi by reference),
+   bukan mengganti variabel dengan array baru. */
+function prosesCheckout() {
+  if (keranjang.length === 0) { log('Keranjang masih kosong, checkout dibatalkan.', 'warn'); return null; }
+
+  const total = hitungUlangSubtotal(keranjang);
+  const jumlah = jumlahItemKeranjang(keranjang);
+  const nomorNota = 'INV-' + Date.now().toString().slice(-6);
+
+  log('Checkout berhasil • ' + jumlah + ' item • total ' + formatRupiah(total) + ' • nota ' + nomorNota + '.', 'success');
+  keranjang.length = 0; // POINTER: mengosongkan array keranjang yang sama
+
+  return { nomorNota: nomorNota, jumlahItem: jumlah, total: total };
+}
+
+/* Demo sederhana pembuktian pointer/reference (dipakai tombol "Demo Pointer") */
+function demoPointer() {
+  const objekAsli = { id: 999, nama: 'Produk Demo Pointer', harga: 50000, kategori: 'Demo', stok: 10, rating: 5 };
+  log('Demo Pointer → nilai awal objekAsli.stok = ' + objekAsli.stok + '.', 'info');
+
+  const penunjuk = objekAsli;          // ini REFERENSI ke object yang sama (bukan salinan)
+  penunjuk.stok = 7;                   // diubah lewat "penunjuk"
+  log('Setelah penunjuk.stok = 7 → objekAsli.stok = ' + objekAsli.stok + ' (object asli ikut berubah = bukti by reference).', 'success');
+
+  const salinanDangkal = { ...objekAsli };  // ini SALINAN (spread), bukan referensi
+  salinanDangkal.stok = 3;
+  log('Sebagai pembanding, salinan { ...objekAsli } diubah menjadi 3 → objekAsli.stok tetap ' + objekAsli.stok + '.', 'info');
+}
+
+/* ==========================================================================
+   3. SORTING — mengurutkan produk
+   Dua "kamus" di bawah memisahkan konfigurasi dari logika:
+   - LABEL_URUTAN : teks yang dibaca manusia untuk log ("Sorting by ...").
+   - KOMPARATOR   : fungsi pembanding (a, b) => angka sesuai kaidah Array.sort().
+   ========================================================================== */
+const LABEL_URUTAN = {
+  'default': 'Default (urutan data asli)',
+  'harga-asc': 'Sorting by Price Ascending (harga termurah → termahal)',
+  'harga-desc': 'Sorting by Price Descending (harga termahal → termurah)',
+  'nama-asc': 'Sorting by Name Ascending (A → Z)',
+  'nama-desc': 'Sorting by Name Descending (Z → A)',
+  'rating-desc': 'Sorting by Rating Descending (rating tertinggi)'
+};
+
+const KOMPARATOR = {
+  'harga-asc': (a, b) => a.harga - b.harga,
+  'harga-desc': (a, b) => b.harga - a.harga,
+  'nama-asc': (a, b) => bandingkanNama(a.nama, b.nama),
+  'nama-desc': (a, b) => bandingkanNama(b.nama, a.nama),
+  'rating-desc': (a, b) => b.rating - a.rating || a.harga - b.harga
+};
+
+/* Fungsi utama sorting.
+   @param daftar     : ARRAY produk yang akan diurutkan
+   @param opsi       : kunci urutan (lihat KOMPARATOR), 'default' = tanpa sorting
+   @param denganLog  : true → tulis proses sorting ke panel log & console
+   @returns ARRAY BARU yang sudah terurut (array asli tidak diubah) */
+function urutkanProduk(daftar, opsi = 'default', denganLog = true) {
+  const hasil = daftar.slice();               // salinan array → data asli tetap aman
+  const komparatorDasar = KOMPARATOR[opsi];
+
+  if (!komparatorDasar) {
+    if (denganLog) log(LABEL_URUTAN['default'] + ' • tanpa sorting.', 'info');
+    return hasil;
+  }
+
+  // Bungkus komparator agar bisa menghitung jumlah perbandingan (untuk edukasi)
+  let jumlahPerbandingan = 0;
+  const komparator = (a, b) => {
+    jumlahPerbandingan++;
+    return komparatorDasar(a, b);
+  };
+
+  if (denganLog) log(LABEL_URUTAN[opsi] + ' ... (' + hasil.length + ' produk)  → Sorting by ' + opsi + ' ...', 'sort');
+
+  const mulai = performance.now();            // ukur waktu proses (opsional)
+  hasil.sort(komparator);                     // Array.prototype.sort() memakai algoritma TimSort
+  const durasi = (performance.now() - mulai).toFixed(2);
+
+  if (denganLog) log('Selesai: ' + LABEL_URUTAN[opsi] + ' ✔ ' + jumlahPerbandingan + ' perbandingan • ' + durasi + ' ms', 'success');
+  return hasil;
+}
+
+/* ==========================================================================
+   4. SEARCHING — mencari produk berdasarkan NAMA
+   4a. Sequential / Linear Search  → memeriksa elemen satu per satu,
+       cocok untuk pencarian sebagian kata (dipakai kotak pencarian navbar).
+   4b. Binary Search               → membelah ruang pencarian menjadi dua,
+       jauh lebih cepat, TETAPI data wajib terurut & kata kunci harus persis.
+   ========================================================================== */
+
+/* --- 4a. SEQUENTIAL SEARCH --- */
+function cariProdukSequential(daftar, kataKunci, denganLog = true) {
+  const kunci = String(kataKunci).trim().toLowerCase();
+
+  if (!kunci) {
+    if (denganLog) log('Kotak pencarian kosong • menampilkan semua produk.', 'info');
+    return daftar.slice();
+  }
+
+  if (denganLog) log("Searching for '" + kataKunci + "' ... (sequential search)", 'search');
+
+  const kata = kunci.split(/\s+/);   // mendukung lebih dari satu kata, mis. "laptop asus"
+  const hasil = [];
+  let perbandingan = 0;
+
+  for (let i = 0; i < daftar.length; i++) {
+    perbandingan++;
+    // Bandingkan dengan nama produk + kategori (semua kata harus cocok)
+    const teks = (daftar[i].nama + ' ' + daftar[i].kategori).toLowerCase();
+    if (kata.every((k) => teks.includes(k))) hasil.push(daftar[i]);
+  }
+
+  if (denganLog) {
+    const tipe = hasil.length > 0 ? 'success' : 'warn';
+    log("Found " + hasil.length + " items (sequential search • " + perbandingan + " perbandingan • " + daftar.length + ' data).', tipe);
+  }
+  return hasil;
+}
+
+/* --- 4b. BINARY SEARCH (nama harus PERSIS sama) --- */
+function cariProdukBinary(daftar, kataKunci, denganLog = true) {
+  const kunci = String(kataKunci).trim();
+  if (denganLog) log("Searching for '" + kunci + "' ... (binary search)", 'search');
+
+  // SYARAT BINARY SEARCH: data harus terurut → urutkan nama A-Z lebih dulu
+  const data = daftar.slice().sort((a, b) => bandingkanNama(a.nama, b.nama));
+
+  let kiri = 0;
+  let kanan = data.length - 1;
+  let perbandingan = 0;
+  let indeksKetemu = -1;
+
+  while (kiri <= kanan) {
+    perbandingan++;
+    const tengah = Math.floor((kiri + kanan) / 2);
+    const perbandinganNama = bandingkanNama(data[tengah].nama, kunci);
+
+    // Catat setiap langkah ke panel log supaya proses pemotongan data
+    // (kiri / kanan / tengah) bisa dilihat langsung oleh pengguna.
+    if (denganLog) {
+      const arah = perbandinganNama === 0
+        ? '✔ cocok'
+        : perbandinganNama < 0
+          ? 'kunci > data → geser batas kiri'
+          : 'kunci < data → geser batas kanan';
+      log('Langkah ' + perbandingan + ': kiri=' + kiri + ' • kanan=' + kanan + ' • tengah=' + tengah + ' → "' + data[tengah].nama + '" (' + arah + ')', 'search');
+    }
+
+    if (perbandinganNama === 0) { indeksKetemu = tengah; break; }
+    if (perbandinganNama < 0) kiri = tengah + 1;   // cari di paruh kanan
+    else kanan = tengah - 1;                       // cari di paruh kiri
+  }
+
+  const hasil = indeksKetemu >= 0 ? [data[indeksKetemu]] : [];
+  if (denganLog) {
+    const tipe = hasil.length > 0 ? 'success' : 'warn';
+    const catatan = hasil.length > 0 ? '' : ' — binary search hanya menemukan nama yang persis sama.';
+    log('Found ' + hasil.length + ' items (binary search • ' + perbandingan + ' perbandingan • dari ' + data.length + ' data)' + catatan, tipe);
+  }
+  return hasil;
+}
+
+// ====== AKHIR SCRIPT 1: DATA & LOGIKA (ARRAY • STRUCT • POINTER • SORTING • SEARCHING) ======
+</script>
+
+<!-- ==========================================================================
+     SCRIPT 2 — TAMPILAN (DOM), EVENT LISTENER, DAN INISIALISASI
+     ========================================================================== -->
+<script>
+/* ==========================================================================
+   E-PASAR — SCRIPT 2: TAMPILAN (DOM), EVENT LISTENER, DAN INISIALISASI
+   ========================================================================== */
+
+/* ==========================================================================
+   5.1 REFERENSI ELEMEN DOM (dikumpulkan sekali agar kode rapi & cepat)
+   ========================================================================== */
+const dom = {
+  grid: el('gridProduk'),
+  pesanKosong: el('pesanKosong'),
+  infoHasil: el('infoHasil'),
+  chips: el('chipsKategori'),
+  selectUrut: el('selectUrut'),
+  formCari: el('formCari'),
+  inputCari: el('inputCari'),
+  btnBersihkan: el('btnBersihkan'),
+  btnBersihkanLog: el('btnBersihkanLog'),
+  btnDemoPointer: el('btnDemoPointer'),
+  inputBinary: el('inputBinary'),
+  btnBinary: el('btnBinary'),
+  daftarNama: el('daftarNamaProduk'),
+  badge: el('badgeKeranjang'),
+  cartPanel: el('keranjangPanel'),
+  cartBody: el('cartBody'),
+  cartTotal: el('cartTotal'),
+  btnCheckout: el('btnCheckout'),
+  btnKeranjang: el('btnKeranjang'),
+  btnTutupKeranjang: el('btnTutupKeranjang'),
+  overlay: el('overlay'),
+  toastWrap: el('toastWrap'),
+  logPanel: el('logPanel')
+};
+
+/* ==========================================================================
+   5.2 NOTIFIKASI (TOAST) — muncul di kiri bawah, hilang otomatis
+   ========================================================================== */
+/* Helper ikon SVG — memakai sprite <symbol> yang didefinisikan sekali di awal
+   halaman (elemen body). Contoh: ikonSvg('cari', 'ikon--btn') menghasilkan
+   <svg class="ikon ikon--btn"><use href="#ikon-cari"></use></svg>.
+   Dipakai oleh toast, kartu produk, dan keranjang belanja. */
+function ikonSvg(nama, kelas) {
+  return '<svg class="ikon' + (kelas ? ' ' + kelas : '') + '" aria-hidden="true">' +
+    '<use href="#ikon-' + nama + '"></use></svg>';
+}
+
+/* Ikon untuk tiap jenis notifikasi (toast) */
+const IKON_TOAST = { info: 'info', warn: 'peringatan', error: 'gagal', sukses: 'centang', keranjang: 'keranjang' };
+
+function toast(pesan, tipe = 'info') {
+  const kotak = document.createElement('div');
+  kotak.className = 'toast' + (tipe === 'info' ? '' : ' toast--' + tipe);
+  kotak.innerHTML = ikonSvg(IKON_TOAST[tipe] || 'info') + '<span>' + escapeHtml(pesan) + '</span>';
+  dom.toastWrap.appendChild(kotak);
+  setTimeout(() => kotak.remove(), 2600);
+}
+
+/* ==========================================================================
+   5.3 CHIP FILTER KATEGORI
+   Kategori diambil dari data produk memakai Set (otomatis tanpa duplikat),
+   jadi menambah produk baru pada ARRAY daftarProduk cukup sekali saja.
+   ========================================================================== */
+function daftarKategori() {
+  const unik = new Set(daftarProduk.map((produk) => produk.kategori));
+  return ['Semua', ...unik];
+}
+
+function renderChips() {
+  dom.chips.innerHTML = '';
+  daftarKategori().forEach((kategori) => {
+    const tombol = document.createElement('button');
+    tombol.type = 'button';
+    tombol.className = 'chip' + (state.kategori === kategori ? ' is-active' : '');
+    tombol.dataset.kategori = kategori;
+    const jumlah = kategori === 'Semua'
+      ? daftarProduk.length
+      : daftarProduk.filter((p) => p.kategori === kategori).length;
+    tombol.textContent = kategori + ' (' + jumlah + ')';
+    dom.chips.appendChild(tombol);
+  });
+}
+
+/* ==========================================================================
+   5.4 RENDER GRID PRODUK (kartu mirip Tokopedia)
+   ========================================================================== */
+const GRADIEN_KATEGORI = {
+  'Elektronik': 'linear-gradient(135deg,#e9f1ff,#d7e6ff)',
+  'Pakaian': 'linear-gradient(135deg,#fff1f2,#ffe0e4)',
+  'Kebutuhan Rumah': 'linear-gradient(135deg,#fff8e7,#ffeed0)',
+  'Kecantikan': 'linear-gradient(135deg,#fdf0ff,#f6e0ff)',
+  'Makanan': 'linear-gradient(135deg,#eefaf0,#d4f5dc)'
+};
+const gradienKategori = (kategori) => GRADIEN_KATEGORI[kategori] || 'linear-gradient(135deg,#f2f5f7,#e6ecf1)';
+
+/* Membentuk satu elemen kartu produk */
+function buatKartu(produk) {
+  const kartu = document.createElement('article');
+  kartu.className = 'card' + (produk.stok === 0 ? ' card--habis' : '');
+
+  // "Gambar" produk: pakai emoji (supaya jalan tanpa internet) atau <img> bila ada gambarUrl
+  const media = produk.gambarUrl
+    ? '<img src="' + escapeHtml(produk.gambarUrl) + '" alt="' + escapeHtml(produk.nama) + '" loading="lazy">'
+    : '<span class="card__emoji" aria-hidden="true">' + produk.emoji + '</span>';
+
+  const infoStok = produk.stok > 0
+    ? 'Stok ' + produk.stok
+    : '<span class="stok-habis">Stok habis</span>';
+
+  kartu.innerHTML =
+    '<div class="card__media" style="background:' + gradienKategori(produk.kategori) + '">' +
+      media +
+      '<span class="card__kat">' + escapeHtml(produk.kategori) + '</span>' +
+    '</div>' +
+    '<div class="card__body">' +
+      '<h3 class="card__title">' + escapeHtml(produk.nama) + '</h3>' +
+      '<p class="card__price">' + formatRupiah(produk.harga) + '</p>' +
+      '<p class="card__meta">' +
+        '<span class="rating"><span class="rating__bintang">' + ikonSvg('bintang') + '</span>' +
+          '<span class="rating__nilai">' + produk.rating.toFixed(1) + '</span></span>' +
+        '<span>•</span><span>' + infoStok + '</span>' +
+      '</p>' +
+      '<p class="card__loc">' + ikonSvg('lokasi', 'ikon--lokasi') + escapeHtml(produk.lokasi || 'Indonesia') + '</p>' +
+      '<button class="btn btn--hijau btn--block" type="button" data-id="' + produk.id + '"' +
+        (produk.stok === 0 ? ' disabled' : '') + '>' +
+        (produk.stok === 0 ? 'Stok Habis' : ikonSvg('tas', 'ikon--btn') + 'Beli') +
+      '</button>' +
+    '</div>';
+
+  return kartu;
+}
+
+/* Render seluruh hasil ke grid (memakai DocumentFragment agar lebih efisien) */
+function renderProduk(data) {
+  dom.grid.innerHTML = '';
+  dom.pesanKosong.hidden = data.length > 0;
+
+  const fragmen = document.createDocumentFragment();
+  data.forEach((produk) => fragmen.appendChild(buatKartu(produk)));
+  dom.grid.appendChild(fragmen);
+
+  renderInfo(data);
+}
+
+/* Teks informasi jumlah produk yang sedang tampil */
+function renderInfo(data) {
+  const keterangan = [];
+  if (state.kategori !== 'Semua') keterangan.push('kategori <b>' + escapeHtml(state.kategori) + '</b>');
+  if (state.kataKunci.trim()) keterangan.push('pencarian <b>"' + escapeHtml(state.kataKunci.trim()) + '"</b>');
+
+  dom.infoHasil.innerHTML = keterangan.length
+    ? 'Menampilkan <b>' + data.length + '</b> dari ' + daftarProduk.length + ' produk (' + keterangan.join(' + ') + ').'
+    : 'Menampilkan seluruh <b>' + data.length + '</b> produk.';
+}
+
+/* ==========================================================================
+   5.5 RENDER KERANJANG BELANJA
+   ========================================================================== */
+function renderKeranjang() {
+  // Total dihitung ulang dari referensi object produk (lihat hitungUlangSubtotal)
+  const total = hitungUlangSubtotal(keranjang);
+  dom.cartTotal.textContent = formatRupiah(total);
+  dom.badge.textContent = jumlahItemKeranjang(keranjang);
+  dom.btnCheckout.disabled = keranjang.length === 0;
+
+  if (keranjang.length === 0) {
+    dom.cartBody.innerHTML = '<p class="cart-kosong">Keranjang masih kosong.<br>Yuk, pilih produk dulu ' +
+      ikonSvg('keranjang', 'ikon--nav') + '</p>';
+    return;
+  }
+
+  dom.cartBody.innerHTML = '';
+  keranjang.forEach((item) => {
+    const barang = document.createElement('div');
+    barang.className = 'item-cart';
+    barang.innerHTML =
+      '<div class="item-cart__thumb" style="background:' + gradienKategori(item.produk.kategori) + '" aria-hidden="true">' + item.produk.emoji + '</div>' +
+      '<div class="item-cart__info">' +
+        '<p class="item-cart__nama">' + escapeHtml(item.produk.nama) + '</p>' +
+        '<p class="item-cart__harga">' + formatRupiah(item.produk.harga) + ' × ' + item.jumlah + ' = ' + formatRupiah(item.subtotal) + '</p>' +
+        '<div class="item-cart__aksi">' +
+          '<button class="qty-btn" type="button" data-aksi="kurang" data-id="' + item.produk.id + '" aria-label="Kurangi jumlah">' + ikonSvg('kurang', 'ikon--sm') + '</button>' +
+          '<span class="qty-val">' + item.jumlah + '</span>' +
+          '<button class="qty-btn" type="button" data-aksi="tambah" data-id="' + item.produk.id + '" aria-label="Tambah jumlah">' + ikonSvg('tambah', 'ikon--sm') + '</button>' +
+          '<button class="item-cart__hapus" type="button" data-aksi="hapus" data-id="' + item.produk.id + '">' + ikonSvg('hapus', 'ikon--sm') + 'Hapus</button>' +
+        '</div>' +
+      '</div>';
+    dom.cartBody.appendChild(barang);
+  });
+}
+
+/* Membuka & menutup drawer keranjang */
+function bukaKeranjang() {
+  dom.cartPanel.classList.add('is-open');
+  dom.overlay.classList.add('is-open');
+  dom.cartPanel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+function tutupKeranjang() {
+  dom.cartPanel.classList.remove('is-open');
+  dom.overlay.classList.remove('is-open');
+  dom.cartPanel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+/* ==========================================================================
+   5.6 ALUR UTAMA: FILTER KATEGORI → SEARCHING → SORTING → RENDER
+   @param opsi.logPencarian : tulis log pencarian ke panel log
+   @param opsi.logSorting   : tulis log sorting ke panel log
+   @param opsi.logKategori  : tulis log filter kategori ke panel log
+   ========================================================================== */
+function perbaruiTampilan(opsi = {}) {
+  const { logPencarian = false, logSorting = false, logKategori = false } = opsi;
+
+  // a) Filter kategori (membentuk ARRAY baru dari daftarProduk)
+  let data = state.kategori === 'Semua'
+    ? daftarProduk.slice()
+    : daftarProduk.filter((produk) => produk.kategori === state.kategori);
+
+  if (logKategori) log('Filter kategori: "' + state.kategori + '" → ' + data.length + ' produk.', 'info');
+
+  // b) Searching berdasarkan nama (sequential search)
+  if (state.kataKunci.trim() !== '') {
+    data = cariProdukSequential(data, state.kataKunci, logPencarian);
+  } else if (logPencarian) {
+    log('Kotak pencarian kosong • menampilkan semua produk kembali.', 'info');
+  }
+
+  // c) Sorting sesuai pilihan pada dropdown "Urutkan"
+  data = urutkanProduk(data, state.urutan, logSorting);
+
+  // d) Simpan ke state lalu render ke layar
+  state.hasil = data;
+  renderProduk(data);
+}
+
+/* ==========================================================================
+   5.7 EVENT LISTENER (semua interaksi pengguna)
+   ========================================================================== */
+
+/* a) Tombol "Beli" pada kartu produk — memakai event delegation,
+      jadi kartu yang baru dirender otomatis ikut berfungsi. */
+dom.grid.addEventListener('click', (event) => {
+  const tombol = event.target.closest('button[data-id]');
+  if (!tombol) return;
+
+  const produk = cariProdukById(Number(tombol.dataset.id)); // REFERENSI ke object produk asli
+  if (!produk) return;
+
+  const berhasil = tambahKeKeranjang(keranjang, produk, 1);  // stok dikurangi by reference
+  if (berhasil) {
+    toast('"' + produk.nama + '" masuk ke keranjang.', 'keranjang');
+    renderKeranjang();
+    perbaruiTampilan();          // kartu dirender ulang → stok pada kartu ikut ter-update
+  }
+});
+
+/* b) Form pencarian: klik "Cari" atau tekan Enter → searching + LOG */
+dom.formCari.addEventListener('submit', (event) => {
+  event.preventDefault();        // cegah halaman ter-reload
+  state.kataKunci = dom.inputCari.value;
+  perbaruiTampilan({ logPencarian: true });
+});
+
+/* c) Pencarian live saat pengguna mengetik (debounce 250 ms).
+      Hasil langsung difilter, tetapi log tidak ditulis agar panel log
+      tidak penuh oleh setiap huruf yang diketik. */
+let timerCari = null;
+dom.inputCari.addEventListener('input', () => {
+  dom.btnBersihkan.classList.toggle('is-show', dom.inputCari.value.trim() !== '');
+  clearTimeout(timerCari);
+  timerCari = setTimeout(() => {
+    state.kataKunci = dom.inputCari.value;
+    perbaruiTampilan();
+  }, 250);
+});
+
+/* d) Tombol silang (ikon SVG #ikon-tutup) untuk membersihkan kata kunci pencarian */
+dom.btnBersihkan.addEventListener('click', () => {
+  dom.inputCari.value = '';
+  state.kataKunci = '';
+  dom.btnBersihkan.classList.remove('is-show');
+  log('Pencarian dibersihkan • menampilkan seluruh produk kembali.', 'info');
+  perbaruiTampilan();
+  dom.inputCari.focus();
+});
+
+/* e) Chip filter kategori */
+dom.chips.addEventListener('click', (event) => {
+  const chip = event.target.closest('.chip');
+  if (!chip) return;
+  state.kategori = chip.dataset.kategori;
+  renderChips();
+  perbaruiTampilan({ logKategori: true });
+});
+
+/* f) Dropdown "Urutkan" → menjalankan SORTING + log */
+dom.selectUrut.addEventListener('change', () => {
+  state.urutan = dom.selectUrut.value;
+  if (state.urutan === 'default') {
+    log('Sorting dimatikan • kembali ke urutan data asli.', 'info');
+    perbaruiTampilan();
+  } else {
+    perbaruiTampilan({ logSorting: true });
+  }
+});
+
+/* g) Buka / tutup drawer keranjang (tombol, overlay, dan tombol Escape) */
+dom.btnKeranjang.addEventListener('click', bukaKeranjang);
+dom.btnTutupKeranjang.addEventListener('click', tutupKeranjang);
+dom.overlay.addEventListener('click', tutupKeranjang);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') tutupKeranjang();
+});
+
+/* h) Aksi di dalam keranjang: tambah (+), kurang (−), hapus.
+      Semuanya mengubah data lewat REFERENSI object produk/item. */
+dom.cartBody.addEventListener('click', (event) => {
+  const tombol = event.target.closest('button[data-aksi]');
+  if (!tombol) return;
+
+  const id = Number(tombol.dataset.id);
+  const aksi = tombol.dataset.aksi;
+
+  if (aksi === 'tambah') ubahJumlahItem(id, 1);
+  else if (aksi === 'kurang') ubahJumlahItem(id, -1);
+  else if (aksi === 'hapus') hapusItemKeranjang(id);
+
+  renderKeranjang();       // perbarui daftar di keranjang + total
+  perbaruiTampilan();      // perbarui stok pada kartu produk
+});
+
+/* i) Tombol Checkout */
+dom.btnCheckout.addEventListener('click', () => {
+  const nota = prosesCheckout();   // hitung total lalu kosongkan keranjang (mutasi array asli)
+
+  if (!nota) { toast('Keranjang masih kosong.', 'warn'); return; }
+
+  renderKeranjang();
+  perbaruiTampilan();
+  tutupKeranjang();
+  toast('Checkout berhasil • ' + nota.jumlahItem + ' item • ' + formatRupiah(nota.total) + ' (' + nota.nomorNota + ')', 'sukses');
+});
+
+/* j) Tombol "Demo Pointer" → membuktikan object dioper by reference */
+dom.btnDemoPointer.addEventListener('click', () => {
+  demoPointer();
+  toast('Bukti pointer/reference sudah ditulis di panel log di bawah ini.');
+});
+
+/* k) Tombol "Bersihkan Log" */
+dom.btnBersihkanLog.addEventListener('click', () => {
+  dom.logPanel.innerHTML = '';
+  log('Panel log dibersihkan.', 'info');
+});
+
+/* l) Demo BINARY SEARCH — butuh nama produk yang persis sama */
+dom.btnBinary.addEventListener('click', () => {
+  const kata = dom.inputBinary.value.trim();
+  if (!kata) {
+    toast('Ketik nama produk persis dulu, mis. "Blender Philips 2 Liter".', 'warn');
+    return;
+  }
+
+  const hasil = cariProdukBinary(daftarProduk, kata, true);  // log otomatis ke panel log
+
+  if (hasil.length === 0) {
+    toast('Nama tidak ditemukan — binary search hanya cocok untuk nama yang persis sama.', 'warn');
+    return;
+  }
+
+  // Tampilkan produk hasil pencarian pada grid
+  state.kategori = 'Semua';
+  state.urutan = 'default';
+  dom.selectUrut.value = 'default';
+  state.kataKunci = hasil[0].nama;
+  dom.inputCari.value = hasil[0].nama;
+  dom.btnBersihkan.classList.add('is-show');
+  renderChips();
+  perbaruiTampilan();
+  toast('Binary search menemukan: ' + hasil[0].nama, 'sukses');
+});
+dom.inputBinary.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') dom.btnBinary.click();
+});
+
+/* ==========================================================================
+   5.8 INISIALISASI APLIKASI
+   ========================================================================== */
+
+/* Mengisi saran nama produk (datalist) untuk keperluan demo binary search */
+function isiDatalistNama() {
+  const fragmen = document.createDocumentFragment();
+  daftarProduk.forEach((produk) => {
+    const opsi = document.createElement('option');
+    opsi.value = produk.nama;
+    fragmen.appendChild(opsi);
+  });
+  dom.daftarNama.appendChild(fragmen);
+}
+
+/* Fungsi yang dijalankan sekali saat halaman selesai dimuat */
+function init() {
+  isiDatalistNama();
+  renderChips();
+  renderKeranjang();
+  perbaruiTampilan();
+
+  log('Aplikasi E-Pasar siap • ' + daftarProduk.length + ' produk dimuat ke dalam ARRAY "daftarProduk".', 'info');
+  log('Tips: tekan Enter pada kotak pencarian, atau ubah pilihan "Urutkan" untuk melihat log searching & sorting.', 'info');
+  console.log('%c[E-Pasar] Struktur data: ARRAY = daftarProduk & keranjang | STRUCT = object literal tiap produk | POINTER = fungsi tambahKeKeranjang() dkk.', 'color:#03ac0e;font-weight:bold');
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+</script>
+
+</body>
+</html>
