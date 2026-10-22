@@ -990,35 +990,89 @@ const KOMPARATOR = {
   'rating-desc': (a, b) => b.rating - a.rating || a.harga - b.harga
 };
 
+/* ==========================================================================
+   3b. BUBBLE SORT MANUAL (ketentuan dosen — wajib nested loop)
+   Mengurutkan array dengan BUBBLE SORT murni: dua elemen BERSEBELAHAN
+   dibandingkan, bila urutannya salah maka keduanya DITUKAR (swap), sehingga
+   elemen "terberat" mengapung (bubble) perlahan ke ujung kanan array
+   pada setiap pass. TIDAK memakai Array.prototype.sort() sama sekali.
+   - daftar     : ARRAY produk (array asli TIDAK diubah; yang diurutkan
+                  adalah salinannya)
+   - kriteria   : 'harga' / 'harga-asc' / 'harga-desc'
+                  'nama'  / 'nama-asc'  / 'nama-desc'
+                  'rating-desc'
+   - denganLog  : true → tulis proses tiap pass ke panel log & console
+   - statistik  : (opsional) object { perbandingan, penukaran } yang diisi
+                  lewat referensi agar pemanggil bisa membacanya.
+   @returns ARRAY BARU yang sudah terurut (array asli tidak diubah). */
+function bubbleSortManual(daftar, kriteria = 'harga', denganLog = true, statistik) {
+  const KUNCI = {
+    'harga': 'harga', 'harga-asc': 'harga', 'harga-desc': 'harga',
+    'nama': 'nama', 'nama-asc': 'nama', 'nama-desc': 'nama',
+    'rating-desc': 'rating'
+  };
+  const kunci = KUNCI[kriteria] || 'harga';
+  const menurun = /desc$/.test(kriteria);      // akhiran '-desc' → urutan terbalik
+  const label = LABEL_URUTAN[kriteria] || ('Bubble Sort by ' + kunci);
+
+  const hasil = daftar.slice();               // salinan array → data asli tetap aman
+  const n = hasil.length;
+
+  /* Aturan "salah urutan" untuk dua elemen bersebelahan a (kiri) & b (kanan) */
+  const perluTukar = (a, b) => {
+    if (kunci === 'nama') {
+      const c = bandingkanNama(a.nama, b.nama);
+      return menurun ? c < 0 : c > 0;
+    }
+    if (kunci === 'rating') {                 // 'rating-desc' (+ harga termurah sebagai tiebreak)
+      if (a.rating !== b.rating) return a.rating < b.rating;
+      return a.harga > b.harga;
+    }
+    return menurun ? a.harga < b.harga : a.harga > b.harga;
+  };
+
+  if (denganLog) log(label + ' ... (' + n + ' produk) — Bubble Sort manual (nested loop, bukan Array.sort)', 'sort');
+
+  let perbandingan = 0, penukaran = 0;
+  const mulai = performance.now();
+
+  for (let i = 0; i < n - 1; i++) {           // PASS ke-i: gelembung terbesar mengapung ke kanan
+    let adaPenukaran = false;
+    let tukarPass = 0;
+    for (let j = 0; j < n - 1 - i; j++) {     // bandingkan elemen BERSEBELAHAN (j & j+1)
+      perbandingan++;
+      if (perluTukar(hasil[j], hasil[j + 1])) {
+        const t = hasil[j];                   // SWAP dua elemen bersebelahan
+        hasil[j] = hasil[j + 1];
+        hasil[j + 1] = t;
+        penukaran++; tukarPass++; adaPenukaran = true;
+      }
+    }
+    if (denganLog) log('Pass ' + (i + 1) + ': ' + (n - 1 - i) + ' perbandingan, ' + tukarPass + ' penukaran → "' + hasil[n - 1 - i].nama + '" sudah mengapung ke posisi final.', 'sort');
+    if (!adaPenukaran) break;                 // optimasi: satu pass tanpa penukaran = sudah terurut
+  }
+
+  const durasi = (performance.now() - mulai).toFixed(2);
+  if (statistik) { statistik.perbandingan = perbandingan; statistik.penukaran = penukaran; }
+  if (denganLog) log('Selesai: ' + label + ' ✔ ' + perbandingan + ' perbandingan • ' + penukaran + ' penukaran • ' + durasi + ' ms (bubble sort manual)', 'success');
+  return hasil;
+}
+
 /* Fungsi utama sorting.
    @param daftar     : ARRAY produk yang akan diurutkan
    @param opsi       : kunci urutan (lihat KOMPARATOR), 'default' = tanpa sorting
    @param denganLog  : true → tulis proses sorting ke panel log & console
-   @returns ARRAY BARU yang sudah terurut (array asli tidak diubah) */
+   @returns ARRAY BARU yang sudah terurut (array asli tidak diubah).
+   PERUBAHAN (ketentuan dosen): pengurutan sekarang dilakukan oleh
+   bubbleSortManual() — BUBBLE SORT dengan nested loop — BUKAN
+   Array.prototype.sort(). KOMPARATOR tetap dipakai sebagai acuan
+   perbandingan untuk visualisasi (lihat vizRekamBubbleSort di SCRIPT 1B). */
 function urutkanProduk(daftar, opsi = 'default', denganLog = true) {
-  const hasil = daftar.slice();               // salinan array → data asli tetap aman
-  const komparatorDasar = KOMPARATOR[opsi];
-
-  if (!komparatorDasar) {
+  if (!KOMPARATOR[opsi]) {
     if (denganLog) log(LABEL_URUTAN['default'] + ' • tanpa sorting.', 'info');
-    return hasil;
+    return daftar.slice();
   }
-
-  // Bungkus komparator agar bisa menghitung jumlah perbandingan (untuk edukasi)
-  let jumlahPerbandingan = 0;
-  const komparator = (a, b) => {
-    jumlahPerbandingan++;
-    return komparatorDasar(a, b);
-  };
-
-  if (denganLog) log(LABEL_URUTAN[opsi] + ' ... (' + hasil.length + ' produk)  → Sorting by ' + opsi + ' ...', 'sort');
-
-  const mulai = performance.now();            // ukur waktu proses (opsional)
-  hasil.sort(komparator);                     // Array.prototype.sort() memakai algoritma TimSort
-  const durasi = (performance.now() - mulai).toFixed(2);
-
-  if (denganLog) log('Selesai: ' + LABEL_URUTAN[opsi] + ' ✔ ' + jumlahPerbandingan + ' perbandingan • ' + durasi + ' ms', 'success');
-  return hasil;
+  return bubbleSortManual(daftar, opsi, denganLog);
 }
 
 /* ==========================================================================
@@ -1238,8 +1292,8 @@ document.getElementById('btnLewatiViz').addEventListener('click', () => { viz.sk
 /* Legenda warna tiap mode */
 const lg = (warna, teks) => '<span><i style="background:' + warna + '"></i>' + teks + '</span>';
 const LEGENDA = {
-  sorting: lg('#4f8f5a', 'Belum urut') + lg('#ffe08a', 'Dibandingkan') + lg('#1e88e5', 'Pivot') + lg('#e5532d', 'Ditukar') + lg('#7bf58f', 'Posisi final') +
-           '<span style="opacity:.8">Ilustrasi Quick Sort — aplikasi sebenarnya memakai Array.sort() (TimSort).</span>',
+  sorting: lg('#4f8f5a', 'Belum urut') + lg('#ffe08a', 'Dibandingkan') + lg('#e5532d', 'Salah urutan → ditukar') + lg('#7bf58f', 'Posisi final') +
+           '<span style="opacity:.8">Ilustrasi Bubble Sort — aplikasi memakai bubbleSortManual() (nested loop, bukan Array.sort).</span>',
   sequential: lg('#ffe08a', 'Sedang dicek') + lg('#7bf58f', 'Cocok') + lg('#6b7a6e', 'Tidak cocok'),
   binary: lg('#ffe08a', 'Titik tengah') + lg('#7fd4ff', 'L = batas kiri') + lg('#ffb37a', 'R = batas kanan') + lg('#4a554c', 'Dibuang') + lg('#7bf58f', 'Ditemukan'),
   filter: lg('#7bf58f', 'Lolos filter') + lg('#4a554c', 'Tersingkir'),
@@ -1247,36 +1301,37 @@ const LEGENDA = {
 };
 
 /* ==========================================================================
-   B. ANIMASI SORTING — batang bertukar tempat (ilustrasi Quick Sort)
+   B. ANIMASI SORTING — batang bertukar tempat (ilustrasi Bubble Sort)
    ========================================================================== */
 
-/* Merekam langkah quick sort (pivot tengah) pada salinan array.
-   Langkah: pivot / cmp (bandingkan) / swap (tukar) / fix (posisi final). */
-function vizRekamQuickSort(items, cmp) {
+/* Merekam langkah BUBBLE SORT pada salinan array.
+   Setiap pass: cmp = bandingkan dua elemen BERSEBELAHAN, swap = tukar bila
+   urutannya salah (gelembung mengapung ke kanan), fix = elemen sudah
+   mencapai posisi final. */
+function vizRekamBubbleSort(items, cmp) {
   const a = items.slice();
+  const n = a.length;
   const langkah = [];
+  const sudahFix = new Array(n).fill(false);
   const tukar = (i, j) => {
-    if (i === j) return;
     const t = a[i]; a[i] = a[j]; a[j] = t;
     langkah.push({ t: 'swap', i: i, j: j });
   };
-  const qs = (lo, hi) => {
-    if (lo > hi) return;
-    if (lo === hi) { langkah.push({ t: 'fix', i: lo }); return; }
-    tukar((lo + hi) >> 1, hi);                 // pivot tengah → pindah ke ujung
-    const pivot = a[hi];
-    langkah.push({ t: 'pivot', i: hi });
-    let batas = lo;
-    for (let j = lo; j < hi; j++) {
-      langkah.push({ t: 'cmp', i: j });
-      if (cmp(a[j], pivot) < 0) { tukar(batas, j); batas++; }
+  for (let i = 0; i < n - 1; i++) {
+    let adaPenukaran = false;
+    for (let j = 0; j < n - 1 - i; j++) {
+      langkah.push({ t: 'cmp', i: j, j: j + 1 });       // bandingkan elemen bersebelahan
+      if (cmp(a[j], a[j + 1]) > 0) { tukar(j, j + 1); adaPenukaran = true; }
     }
-    tukar(batas, hi);
-    langkah.push({ t: 'fix', i: batas });
-    qs(lo, batas - 1);
-    qs(batas + 1, hi);
-  };
-  qs(0, a.length - 1);
+    if (n - 1 - i >= 0 && !sudahFix[n - 1 - i]) {       // elemen terkanan pass ini = posisi final
+      sudahFix[n - 1 - i] = true;
+      langkah.push({ t: 'fix', i: n - 1 - i });
+    }
+    if (!adaPenukaran) break;
+  }
+  for (let k = 0; k < n; k++) {                         // pastikan semua elemen ter-mark final
+    if (!sudahFix[k]) { sudahFix[k] = true; langkah.push({ t: 'fix', i: k }); }
+  }
   return { langkah: langkah, hasil: a };
 }
 
@@ -1310,7 +1365,7 @@ function vizSorting(daftar, opsi) {
   const kmp = KOMPARATOR[opsi];
   if (!kmp) return;
   const data = daftar.slice();
-  const judul = (LABEL_URUTAN[opsi] || opsi).split(' (')[0];
+  const judul = (LABEL_URUTAN[opsi] || opsi).split(' (')[0] + ' — Bubble Sort';
 
   vizJalankan(judul, LEGENDA.sorting, async (ctx) => {
     if (data.length < 2) {
@@ -1343,53 +1398,50 @@ function vizSorting(daftar, opsi) {
     if (!(await vizTunggu(ctx, n * 18 + 600))) return;
     slot.forEach((b) => { b.firstChild.style.transitionDelay = '0ms'; });
 
-    // 2) Rekam langkah, lalu putar ulang dengan animasi
-    const rekaman = vizRekamQuickSort(data, kmp);
+    // 2) Rekam langkah BUBBLE SORT, lalu putar ulang dengan animasi
+    const rekaman = vizRekamBubbleSort(data, kmp);
     const langkah = rekaman.langkah;
     const jeda = jepit(4200 / langkah.length, 22, 90);
-    let jmlCmp = 0, jmlSwap = 0, bar = null, bersih = [], pivotBar = null;
+    let jmlCmp = 0, jmlSwap = 0, bar = null, bersih = [];
     const lepasAktif = () => { bersih.forEach((b) => b.classList.remove('is-cmp', 'is-swap')); bersih = []; };
     const taruh = (b, idx) => { b.style.left = (idx * 100 / n) + '%'; };
 
     for (let s = 0; s < langkah.length; s++) {
       const st = langkah[s];
       lepasAktif();
-      if (st.t === 'pivot') {
-        if (pivotBar) pivotBar.classList.remove('is-pivot');
-        pivotBar = slot[st.i];
-        pivotBar.classList.add('is-pivot');
-        vizCaption('Pivot: "' + potongNama(pivotBar.dataset.nama) + '"');
-        if (!(await vizTunggu(ctx, jeda * 1.6))) return;
-      } else if (st.t === 'cmp') {
+      if (st.t === 'cmp') {                     // bandingkan DUA elemen BERSEBELAHAN
         bar = slot[st.i];
-        bar.classList.add('is-cmp'); bersih.push(bar);
+        const tetangga = slot[st.j];
+        bar.classList.add('is-cmp'); tetangga.classList.add('is-cmp');
+        bersih.push(bar, tetangga);
         jmlCmp++;
-        vizCaption('Bandingkan "' + potongNama(bar.dataset.nama) + '" ⇄ pivot');
-        vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' pertukaran');
+        vizCaption('Bandingkan "' + potongNama(bar.dataset.nama) + '" ⇄ "' + potongNama(tetangga.dataset.nama) + '" (bersebelahan)');
+        vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' penukaran');
         if (!(await vizTunggu(ctx, jeda))) return;
-      } else if (st.t === 'swap') {
+      } else if (st.t === 'swap') {             // urutan salah → tukar kedua elemen bersebelahan
         const a = slot[st.i], b = slot[st.j];
         slot[st.i] = b; slot[st.j] = a;
         taruh(b, st.i); taruh(a, st.j);
         a.classList.add('is-swap'); b.classList.add('is-swap'); bersih.push(a, b);
         jmlSwap++;
-        vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' pertukaran');
+        vizCaption('Salah urutan → tukar "' + potongNama(a.dataset.nama) + '" ⇄ "' + potongNama(b.dataset.nama) + '"');
+        vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' penukaran');
         if (!(await vizTunggu(ctx, jeda * 1.9))) return;
-      } else if (st.t === 'fix') {
+      } else if (st.t === 'fix') {              // elemen "mengapung" ke posisi final
         const f = slot[st.i];
-        f.classList.remove('is-pivot'); f.classList.add('is-placed');
-        if (f === pivotBar) pivotBar = null;
+        f.classList.remove('is-cmp'); f.classList.add('is-placed');
+        vizCaption('"' + potongNama(f.dataset.nama) + '" sudah di posisi final (mengapung ke kanan)');
       }
       vizProg((s + 1) / langkah.length * 100);
     }
     lepasAktif();
 
     // 3) Selesai: gelombang cahaya menyapu semua batang
-    slot.forEach((b) => { b.classList.remove('is-pivot'); b.classList.add('is-placed', 'is-done'); });
+    slot.forEach((b) => { b.classList.remove('is-cmp'); b.classList.add('is-placed', 'is-done'); });
     vizProg(100);
     vizChip('Terurut ✔', '');
-    vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' pertukaran');
-    vizCaption('Terurut! Urutan sama dengan hasil Array.sort() pada grid produk.');
+    vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' penukaran');
+    vizCaption('Terurut! Urutan sama persis dengan hasil bubbleSortManual() pada grid produk (bubble sort).');
   }, 'Animasi sorting berjalan di panel log');
 }
 
