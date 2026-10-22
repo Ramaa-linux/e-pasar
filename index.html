@@ -208,6 +208,135 @@
   pre{margin:10px 0;background:#0f1a12;border-radius:9px;padding:12px 14px;overflow-x:auto}
   pre code{background:transparent;color:#c9f7cd;font-size:11.5px;line-height:1.6;padding:0}
 
+  /* ----- 3.4b Animasi: Panel "Visualisasi Proses" (sorting, searching, filter, pointer) -----
+     Panel gelap bergaya "radar" di atas log. Semua animasi memakai CSS transition /
+     keyframes + Web Animations API (tanpa library). Mesin animasinya ada di SCRIPT 1B. */
+  .viz{position:relative;background:#0b140e;color:#c9f7cd;border-bottom:1px solid rgba(255,255,255,.06);overflow:hidden}
+  .viz::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(620px 170px at 12% 0,rgba(3,172,14,.24),transparent 70%),
+      linear-gradient(rgba(123,245,143,.05) 1px,transparent 1px) 0 0/100% 26px,
+      linear-gradient(90deg,rgba(123,245,143,.05) 1px,transparent 1px) 0 0/26px 100%}
+  .viz>*{position:relative}
+  .viz__head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px 2px}
+  .viz__judul{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#e9fff0}
+  .viz__judul .ikon{color:#7bf58f}
+  .viz__chip{font-family:var(--mono);font-size:11px;padding:2px 10px;border-radius:999px;border:1px solid rgba(123,245,143,.35);color:#7bf58f;background:rgba(3,172,14,.12);transition:.2s}
+  .viz__chip.is-run{border-color:rgba(255,224,138,.5);color:#ffe08a;background:rgba(255,200,40,.1);animation:chip-denyut 1.1s ease-in-out infinite}
+  .viz__chip.is-warn{border-color:rgba(255,179,122,.5);color:#ffb37a;background:rgba(255,140,60,.1)}
+  .viz__stat{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:#9fd8a6}
+  .viz__ctrl{display:flex;gap:6px;align-items:center}
+  .viz__btn,.viz__sel{display:inline-flex;align-items:center;gap:5px;font-family:inherit;font-size:11.5px;font-weight:700;color:#bfeec6;background:rgba(255,255,255,.05);border:1px solid rgba(123,245,143,.22);border-radius:8px;padding:4px 9px;cursor:pointer;transition:.15s}
+  .viz__btn:hover,.viz__sel:hover{border-color:#7bf58f;background:rgba(123,245,143,.12)}
+  .viz__sel{padding:4px 6px;outline:0}
+  .viz__sel option{background:#0f1a12;color:#c9f7cd}
+  .viz__stage{position:relative;height:196px;margin:12px 16px 0}
+  .viz__caption{margin:8px 16px 0;min-height:18px;font-family:var(--mono);font-size:11.5px;color:#a9e3b1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .viz__legend{display:flex;gap:6px 14px;flex-wrap:wrap;padding:6px 16px 12px;font-size:11px;color:#79a681}
+  .viz__legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .viz__prog{height:2px;background:rgba(255,255,255,.06)}
+  .viz__prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#03ac0e,#7bf58f);box-shadow:0 0 10px #7bf58f;transition:width .15s linear}
+  .viz__idle-teks{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:0 22px;font-size:12.5px;line-height:1.6;color:#d6f5da;text-shadow:0 1px 10px #0b140e,0 0 18px #0b140e}
+  .viz__idle-teks b{color:#7bf58f}
+  @keyframes chip-denyut{0%,100%{box-shadow:0 0 0 0 rgba(255,224,138,.35)}50%{box-shadow:0 0 0 6px rgba(255,224,138,0)}}
+
+  /* -- Mode SORTING: batang (bar) yang bertukar tempat -- */
+  .vbars{position:absolute;inset:0}
+  .vb{position:absolute;top:0;bottom:0;transition:left .3s cubic-bezier(.3,.9,.3,1)}
+  .vb__fill{position:absolute;left:11%;right:11%;bottom:0;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,#4f8f5a,#2a5a34);transform-origin:50% 100%;transition:height .5s cubic-bezier(.2,.9,.2,1),background .15s,transform .22s,box-shadow .2s}
+  .vb__e{position:absolute;left:50%;top:-17px;transform:translateX(-50%);font-size:11px;line-height:1;pointer-events:none}
+  .vb.is-cmp .vb__fill{background:linear-gradient(180deg,#ffe08a,#e0a400);box-shadow:0 0 14px rgba(255,200,40,.75);transform:translateY(-6px)}
+  .vb.is-pivot .vb__fill{background:linear-gradient(180deg,#8fd8ff,#1e88e5);box-shadow:0 0 14px rgba(60,160,255,.75)}
+  .vb.is-swap .vb__fill{background:linear-gradient(180deg,#ffb3a0,#e5532d);box-shadow:0 0 16px rgba(255,100,60,.85);transform:translateY(-12px) scale(1.07)}
+  .vb.is-placed .vb__fill{background:linear-gradient(180deg,#7bf58f,#03ac0e)}
+  .vb.is-done .vb__fill{animation:selesai-gelombang .75s ease both;animation-delay:calc(var(--i) * 24ms)}
+  .vb.is-idle .vb__fill{opacity:.5;animation:napas 2.6s ease-in-out infinite;animation-delay:calc(var(--i) * -120ms)}
+  @keyframes selesai-gelombang{0%{transform:none;filter:brightness(1)}40%{transform:translateY(-16px);filter:brightness(1.7) drop-shadow(0 0 9px #7bf58f)}100%{transform:none;filter:brightness(1)}}
+  @keyframes napas{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+
+  /* -- Mode SEARCHING / FILTER: kotak sel + pemindai (scanner) -- */
+  .vcells{position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px;align-content:start}
+  .vc{position:relative;height:32px;display:grid;place-items:center;border-radius:8px;font-size:15px;line-height:1;background:rgba(255,255,255,.04);border:1px solid rgba(123,245,143,.16);transition:opacity .35s,transform .35s,background .2s,border-color .2s,filter .35s,box-shadow .25s}
+  .vc small{position:absolute;left:4px;top:1px;font:700 8px var(--mono);color:#6f9a78}
+  .vc.is-cek{background:rgba(255,224,138,.16);border-color:#ffe08a}
+  .vc.is-miss{opacity:.3;filter:grayscale(1)}
+  .vc.is-out{opacity:.13;transform:translateY(6px) scale(.82);filter:grayscale(1)}
+  .vc.is-hit{background:rgba(3,172,14,.38);border-color:#7bf58f;box-shadow:0 0 14px rgba(123,245,143,.6);animation:pop-ketemu .6s cubic-bezier(.2,1.6,.4,1)}
+  .vc.is-final{animation:denyut-akhir 1s ease-in-out 2}
+  .vc.is-getar{animation:getar .5s ease}
+  .vc.m-L::before,.vc.m-R::after{position:absolute;z-index:2;font:800 8px var(--mono);line-height:1;padding:2px 4px;border-radius:5px;color:#0b140e}
+  .vc.m-L::before{content:"L";left:-3px;bottom:-6px;background:#7fd4ff}
+  .vc.m-R::after{content:"R";right:-3px;bottom:-6px;background:#ffb37a}
+  .vscan{position:absolute;left:0;top:0;z-index:3;pointer-events:none;opacity:0;border-radius:9px;border:2px solid #ffe08a;box-shadow:0 0 18px rgba(255,224,138,.85),inset 0 0 12px rgba(255,224,138,.4);transition:transform .14s linear,width .14s,height .14s,opacity .25s}
+  .vscan::after{content:"";position:absolute;inset:-12px;border-radius:16px;background:radial-gradient(closest-side,rgba(255,224,138,.28),transparent);animation:sorot 1s ease-in-out infinite}
+  .vscan.is-lompat{transition:transform .38s cubic-bezier(.3,1.3,.4,1),width .2s,height .2s,opacity .25s}
+  .vring{position:absolute;z-index:2;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid #7bf58f;pointer-events:none;animation:cincin .8s ease-out forwards}
+  @keyframes pop-ketemu{0%{transform:scale(.7)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+  @keyframes denyut-akhir{0%,100%{box-shadow:0 0 14px rgba(123,245,143,.6)}50%{box-shadow:0 0 26px rgba(123,245,143,1)}}
+  @keyframes getar{0%,100%{transform:none}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+  @keyframes sorot{0%,100%{opacity:.5}50%{opacity:1}}
+  @keyframes cincin{from{opacity:.9;transform:scale(.4)}to{opacity:0;transform:scale(3.6)}}
+
+  /* -- Mode POINTER: penunjuk → object, dan salinan terpisah -- */
+  .vp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px 0}
+  .vp__ptr,.vp__box{opacity:0;transform:translateY(10px) scale(.92);transition:opacity .45s,transform .45s cubic-bezier(.2,1.4,.4,1),box-shadow .3s,border-color .3s}
+  .vp__ptr.is-in,.vp__box.is-in{opacity:1;transform:none}
+  .vp__ptr{padding:8px 12px;border-radius:10px;border:1px solid #1e88e5;background:rgba(30,136,229,.14);color:#8fd8ff;font:700 12px var(--mono);text-align:center}
+  .vp__ptr small,.vp__box small{display:block;font-weight:600;font-size:10px;opacity:.75}
+  .vp__arrow{position:relative;width:78px;height:2px;margin:0 8px;transform:scaleX(0);transform-origin:left;transition:transform .6s ease;background:repeating-linear-gradient(90deg,#8fd8ff 0 8px,transparent 8px 14px);background-size:14px 2px;animation:aliran .6s linear infinite}
+  .vp__arrow.is-in{transform:scaleX(1)}
+  .vp__arrow::after{content:"";position:absolute;right:-3px;top:-4px;border-left:8px solid #8fd8ff;border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .vp__arrow.is-denyut{filter:drop-shadow(0 0 6px #8fd8ff)}
+  .vp__box{min-width:132px;padding:9px 13px;border-radius:12px;border:1px solid rgba(123,245,143,.4);background:rgba(3,172,14,.12);color:#c9f7cd;font:600 12px var(--mono)}
+  .vp__box b{display:block;color:#e9fff0;margin-bottom:2px}
+  .vp__box em{font-style:normal;display:inline-block;font-weight:800;color:#7bf58f;font-size:15px}
+  .vp__box--salin{margin-left:26px;border-color:rgba(255,224,138,.45);background:rgba(255,200,40,.09)}
+  .vp__box--salin em{color:#ffe08a}
+  .vp__box.is-flash{box-shadow:0 0 0 3px rgba(123,245,143,.35),0 0 24px rgba(123,245,143,.5);border-color:#7bf58f}
+  .vp__box--salin.is-flash{box-shadow:0 0 0 3px rgba(255,224,138,.35),0 0 24px rgba(255,224,138,.5);border-color:#ffe08a}
+  .vp__ptr.is-flash{box-shadow:0 0 0 3px rgba(143,216,255,.35),0 0 24px rgba(143,216,255,.5)}
+  .vp em.is-roll{animation:angka-gulung .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes aliran{to{background-position:14px 0}}
+  @keyframes angka-gulung{0%{opacity:0;transform:translateY(-14px)}100%{opacity:1;transform:none}}
+
+  /* -- Pill petunjuk: muncul bila panel log belum terlihat saat animasi berjalan -- */
+  .viz-pill{position:fixed;right:16px;bottom:16px;z-index:55;display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid rgba(123,245,143,.45);border-radius:999px;background:#0f1a12;color:#c9f7cd;font:700 12px var(--font);cursor:pointer;box-shadow:var(--shadow-md);opacity:0;visibility:hidden;transform:translateY(14px);transition:.3s}
+  .viz-pill.is-show{opacity:1;visibility:visible;transform:none}
+  .viz-pill:hover{border-color:#7bf58f}
+  .viz-pill__dot{width:8px;height:8px;border-radius:50%;background:#7bf58f;animation:chip-denyut 1.1s infinite;box-shadow:0 0 0 0 rgba(123,245,143,.6)}
+  .viz-pill .ikon{transform:rotate(90deg);color:#7bf58f}
+
+  /* ----- 3.4c Animasi: kartu produk, keranjang, log, konfeti ----- */
+  .card__rank{position:absolute;right:8px;top:8px;z-index:2;min-width:28px;padding:2px 8px;border-radius:999px;background:#0f1a12;color:#7bf58f;font:800 11px var(--mono);text-align:center;pointer-events:none;animation:rank-muncul 2s ease both}
+  @keyframes rank-muncul{0%{opacity:0;transform:scale(.4) rotate(-14deg)}12%{opacity:1;transform:scale(1.2)}22%{transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-5px)}}
+  .card.is-cocok{animation:kartu-cocok 1.1s ease .1s 1}
+  .card.is-cocok::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(3,172,14,.3) 48%,transparent 66%);transform:translateX(-120%);animation:kilau 1s ease .1s 1 forwards}
+  @keyframes kartu-cocok{0%{box-shadow:0 0 0 0 rgba(3,172,14,.5)}100%{box-shadow:0 0 0 12px rgba(3,172,14,0)}}
+  @keyframes kilau{to{transform:translateX(120%)}}
+  .terbang{position:fixed;left:0;top:0;z-index:70;font-size:30px;line-height:1;pointer-events:none;will-change:transform;filter:drop-shadow(0 6px 10px rgba(3,172,14,.45))}
+  .cart-btn__badge.bump{animation:badge-lompat .55s cubic-bezier(.2,1.8,.4,1)}
+  .cart-btn.goyang{animation:keranjang-goyang .5s ease}
+  .cart-btn.goyang::after{content:"";position:absolute;inset:-2px;border-radius:12px;border:2px solid var(--hijau);pointer-events:none;animation:cincin-keranjang .6s ease-out forwards}
+  @keyframes badge-lompat{0%{transform:scale(1)}40%{transform:scale(1.7) rotate(-10deg)}100%{transform:scale(1)}}
+  @keyframes keranjang-goyang{0%,100%{transform:none}25%{transform:rotate(-6deg)}50%{transform:rotate(5deg)}75%{transform:rotate(-3deg)}}
+  @keyframes cincin-keranjang{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(1.35)}}
+  .konfeti{position:fixed;left:0;top:0;z-index:80;pointer-events:none;will-change:transform}
+  .log__item{animation:log-masuk .55s ease both}
+  @keyframes log-masuk{0%{opacity:0;transform:translateX(-16px);background:rgba(123,245,143,.3)}55%{opacity:1;transform:none}100%{background:transparent}}
+
+  @media (max-width:720px){
+    .viz__stat{margin-left:0;flex:1 1 100%;order:5}
+    .viz__ctrl{margin-left:auto}
+    .viz__stage{height:206px}
+    .vb__e{display:none}
+    .vp__arrow{width:34px}
+    .vp__box--salin{margin-left:0}
+    .viz-pill{bottom:76px;right:12px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0ms!important;scroll-behavior:auto!important}
+  }
+
   /* ----- 3.5 Footer ----- */
   .footer{border-top:1px solid var(--garis);background:var(--putih);padding:20px 16px;text-align:center;color:var(--teks-lembut);font-size:12.5px}
   .footer b{color:var(--hijau-gelap)}
@@ -280,6 +409,10 @@
   <symbol id="ikon-pointer" viewBox="0 0 24 24"><path d="M6 3.4 18.4 11l-5.1.8 2.7 5.5-2.4 1.2-2.7-5.5L7.2 16 6 3.4Z"/></symbol>
   <symbol id="ikon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.4"/><circle cx="12" cy="12" r="2.4"/><path d="M12 2.6v3.2"/><path d="M12 18.2v3.2"/><path d="M2.6 12h3.2"/><path d="M18.2 12h3.2"/></symbol>
   <symbol id="ikon-panah" viewBox="0 0 24 24"><path d="M9.4 5.6 15.8 12l-6.4 6.4"/></symbol>
+  <!-- Ikon untuk panel animasi: kilau (judul), ulangi, lewati -->
+  <symbol id="ikon-sorot" viewBox="0 0 24 24"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9L12 3.5Z"/><path d="M18.5 16.5v3.5"/><path d="M16.75 18.25h3.5"/></symbol>
+  <symbol id="ikon-ulang" viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.2-5.1"/><path d="M5 4.5v3.4h3.4"/></symbol>
+  <symbol id="ikon-lewati" viewBox="0 0 24 24"><path d="M6 6l6 6-6 6"/><path d="M13 6l6 6-6 6"/></symbol>
 </svg>
 
 <!-- ==========================================================================
@@ -367,6 +500,29 @@
       <button class="btn btn--hijau btn--sm" id="btnBinary" type="button"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-target"></use></svg>Jalankan Binary Search</button>
     </div>
 
+    <!-- Visualisasi animasi proses (sorting, searching, filter, pointer).
+         Mesin animasinya ada di SCRIPT 1B; panel ini otomatis berjalan saat fitur dipakai. -->
+    <div class="viz" id="viz" aria-label="Visualisasi animasi proses sorting dan searching">
+      <div class="viz__head">
+        <span class="viz__judul"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-sorot"></use></svg><span id="vizJudul">Visualisasi Proses</span></span>
+        <span class="viz__chip" id="vizChip">Siap</span>
+        <span class="viz__ctrl">
+          <select class="viz__sel" id="vizKecepatan" aria-label="Kecepatan animasi">
+            <option value="0.5">Lambat</option>
+            <option value="1" selected>Normal</option>
+            <option value="2">Cepat</option>
+          </select>
+          <button class="viz__btn" id="btnUlangViz" type="button" title="Putar ulang animasi terakhir"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-ulang"></use></svg>Ulangi</button>
+          <button class="viz__btn" id="btnLewatiViz" type="button" title="Langsung ke hasil akhir"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-lewati"></use></svg>Lewati</button>
+        </span>
+        <span class="viz__stat" id="vizStat"></span>
+      </div>
+      <div class="viz__stage" id="vizStage"></div>
+      <p class="viz__caption" id="vizCaption" aria-live="polite"></p>
+      <div class="viz__legend" id="vizLegend"></div>
+      <div class="viz__prog"><i id="vizProg"></i></div>
+    </div>
+
     <div class="log" id="logPanel" role="log" aria-live="polite"></div>
   </div>
 </section>
@@ -390,6 +546,12 @@
     <button class="btn btn--hijau btn--block" id="btnCheckout" type="button"><svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-keranjang"></use></svg>Checkout Sekarang</button>
   </div>
 </aside>
+
+<!-- Pill petunjuk: muncul saat animasi berjalan tetapi panel log belum terlihat di layar -->
+<button class="viz-pill" id="vizPill" type="button" aria-label="Lihat animasi di panel log">
+  <span class="viz-pill__dot"></span><span id="vizPillTeks">Animasi berjalan di panel log</span>
+  <svg class="ikon ikon--btn" aria-hidden="true"><use href="#ikon-panah"></use></svg>
+</button>
 
 <!-- Wadah notifikasi (toast) -->
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
@@ -503,6 +665,29 @@ hasil.sort((a, b) =&gt; a.harga - b.harga);      // ascending: termurah → term
     </div>
   </details>
 
+  <!-- 3b. ANIMASI -->
+  <details class="doc">
+    <summary><svg class="ikon ikon--chev" aria-hidden="true"><use href="#ikon-panah"></use></svg> 3b. Animasi Proses — letak kode &amp; cara membaca</summary>
+    <div class="doc__body">
+      <ul>
+        <li><b>Panel “Visualisasi Proses”</b> (di atas log) menggambar ulang proses yang sedang berjalan.
+            Kode mesinnya ada di <code>SCRIPT 1B</code>; logika aslinya di SCRIPT 1 tidak diubah.
+            Tombol <b>Lambat/Normal/Cepat</b> mengatur kecepatan, <b>Ulangi</b> memutar ulang, <b>Lewati</b> langsung ke hasil akhir.</li>
+        <li><b>Sorting</b> — <code>vizSorting()</code>: setiap produk menjadi batang; batang kuning = sedang dibandingkan,
+            biru = pivot, oranye = bertukar tempat, hijau = posisi final, lalu gelombang cahaya menyapu seluruh batang.
+            Langkahnya direkam oleh <code>vizRekamQuickSort()</code> (ilustrasi Quick Sort), sedangkan hasil aplikasi tetap dari <code>Array.sort()</code>.</li>
+        <li><b>Sequential search</b> — <code>vizSequential()</code>: pemindai kuning menyapu sel satu per satu; sel yang cocok “meletup” hijau dengan cincin gelombang.</li>
+        <li><b>Binary search</b> — <code>vizBinary()</code>: sel meluncur ke urutan A–Z (teknik FLIP), lalu pemindai melompat ke titik tengah,
+            penanda <b>L</b> dan <b>R</b> menyempit, dan separuh data yang dibuang meredup.</li>
+        <li><b>Filter &amp; Pointer</b> — <code>vizFilter()</code> menjatuhkan sel yang tidak lolos; <code>vizPointer()</code> memperlihatkan
+            penunjuk menunjuk object yang sama (stok ikut berubah) sedangkan salinan <code>{...obj}</code> berdiri sendiri.</li>
+        <li><b>Animasi lain:</b> kartu produk meluncur ke posisi baru saat diurutkan (<code>animKartuSetelahRender()</code>) dan menampilkan lencana peringkat;
+            emoji produk terbang ke keranjang saat klik <b>Beli</b> (<code>animTerbang()</code>); konfeti saat checkout (<code>animKonfeti()</code>).
+            Pengguna yang mengaktifkan <i>reduce motion</i> di sistem operasi otomatis mendapat versi tanpa gerak.</li>
+      </ul>
+    </div>
+  </details>
+
   <!-- 4. CARA MENJALANKAN -->
   <details class="doc">
     <summary><svg class="ikon ikon--chev" aria-hidden="true"><use href="#ikon-panah"></use></svg> 4. Cara menjalankan file</summary>
@@ -533,7 +718,9 @@ hasil.sort((a, b) =&gt; a.harga - b.harga);      // ascending: termurah → term
             <li>Ketik <i>laptop</i> di kotak pencarian lalu tekan <kbd>Enter</kbd> → lihat log searching.</li>
             <li>Pilih <i>Harga: Termurah</i> pada dropdown Urutkan → lihat log sorting.</li>
             <li>Klik <i>Beli</i> beberapa kali → stok berkurang (perubahan via referensi) dan keranjang bertambah.</li>
-            <li>Klik <i>Demo Pointer</i> → membuktikan object dioper <i>by reference</i>.</li>
+            <li>Klik <i>Demo Pointer</i> → membuktikan object dioper <i>by reference</i> (lengkap dengan animasi penunjuk).</li>
+            <li>Ketik nama persis di kolom <i>Demo Binary Search</i> → lihat data terurut A–Z lalu ruang pencarian dibelah dua.</li>
+            <li>Setiap proses di atas juga digambar sebagai animasi di panel <i>Visualisasi Proses</i> pada bagian log.</li>
           </ul>
         </li>
       </ul>
@@ -918,6 +1105,644 @@ function cariProdukBinary(daftar, kataKunci, denganLog = true) {
 </script>
 
 <!-- ==========================================================================
+     SCRIPT 1B — MESIN ANIMASI
+     Visualisasi sorting, searching (sequential & binary), filter, dan pointer,
+     ditambah animasi kartu produk (FLIP), terbang ke keranjang, dan konfeti.
+     Script ini hanya "menggambar ulang" proses; logika aslinya tetap di SCRIPT 1.
+     ========================================================================== -->
+<script>
+'use strict';
+
+/* ==========================================================================
+   A. DASAR: pengaturan gerak, elemen panel, pembatalan animasi
+   ========================================================================== */
+const KURANGI_GERAK = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const bisaAnimasi = typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
+const jepit = (x, min, maks) => Math.max(min, Math.min(maks, x));
+const potongNama = (teks, maks = 26) => (teks.length > maks ? teks.slice(0, maks - 1) + '…' : teks);
+
+/* Wrapper aman untuk Web Animations API (tidak error bila browser tidak mendukung) */
+function animasi(elemen, frames, opsi) {
+  if (!bisaAnimasi || KURANGI_GERAK || !elemen) return null;
+  return elemen.animate(frames, opsi);
+}
+
+const viz = {
+  token: 0,          // setiap animasi baru menaikkan token → animasi lama otomatis berhenti
+  kecepatan: 1,      // pengali kecepatan (0.5 lambat • 1 normal • 2 cepat)
+  skip: false,       // true → semua jeda dilewati (tombol "Lewati")
+  terakhir: null,    // fungsi untuk memutar ulang animasi terakhir
+  tampak: false,     // apakah panel visualisasi sedang terlihat di layar
+  timerPill: null
+};
+
+const vizEl = {
+  root: document.getElementById('viz'),
+  stage: document.getElementById('vizStage'),
+  judul: document.getElementById('vizJudul'),
+  chip: document.getElementById('vizChip'),
+  stat: document.getElementById('vizStat'),
+  caption: document.getElementById('vizCaption'),
+  legend: document.getElementById('vizLegend'),
+  prog: document.getElementById('vizProg'),
+  pill: document.getElementById('vizPill'),
+  pillTeks: document.getElementById('vizPillTeks')
+};
+
+/* Jeda yang bisa dibatalkan: resolve(true) bila animasi masih yang terbaru */
+function vizTunggu(ctx, ms) {
+  return new Promise((selesai) => {
+    const d = (KURANGI_GERAK || viz.skip) ? 0 : ms / viz.kecepatan;
+    setTimeout(() => selesai(ctx.id === viz.token), d);
+  });
+}
+
+function vizChip(teks, tipe) {
+  vizEl.chip.textContent = teks;
+  vizEl.chip.className = 'viz__chip' + (tipe ? ' is-' + tipe : '');
+}
+const vizCaption = (teks) => { vizEl.caption.textContent = teks; };
+const vizStat = (teks) => { vizEl.stat.textContent = teks; };
+const vizProg = (persen) => { vizEl.prog.style.width = jepit(persen, 0, 100) + '%'; };
+
+/* Pill petunjuk saat panel log berada di luar layar */
+function vizSembunyikanPill() {
+  vizEl.pill.classList.remove('is-show');
+  clearTimeout(viz.timerPill);
+}
+function vizTampilkanPill(teks) {
+  if (viz.tampak) return;
+  vizEl.pillTeks.textContent = teks;
+  vizEl.pill.classList.add('is-show');
+  clearTimeout(viz.timerPill);
+  viz.timerPill = setTimeout(vizSembunyikanPill, 7000);
+}
+if (typeof IntersectionObserver !== 'undefined') {
+  new IntersectionObserver((entri) => {
+    viz.tampak = entri[0].isIntersecting;
+    if (viz.tampak) vizSembunyikanPill();
+  }, { threshold: 0.25 }).observe(vizEl.root);
+}
+vizEl.pill.addEventListener('click', () => {
+  vizEl.root.scrollIntoView({ behavior: KURANGI_GERAK ? 'auto' : 'smooth', block: 'center' });
+  vizSembunyikanPill();
+});
+
+/* Menjalankan satu animasi.
+   job(ctx) adalah fungsi async; setiap `await vizTunggu(ctx, ms)` yang
+   mengembalikan false berarti animasi ini sudah digantikan → harus berhenti. */
+function vizJalankan(judul, legendaHtml, job, teksPill) {
+  viz.token++;
+  viz.skip = false;
+  const ctx = { id: viz.token };
+  viz.terakhir = () => vizJalankan(judul, legendaHtml, job, teksPill);
+
+  vizEl.judul.textContent = judul;
+  vizEl.legend.innerHTML = legendaHtml;
+  vizEl.stage.innerHTML = '';
+  vizChip('Berjalan', 'run');
+  vizStat('');
+  vizCaption('');
+  vizProg(0);
+  vizTampilkanPill(teksPill || 'Animasi berjalan di panel log');
+
+  Promise.resolve()
+    .then(() => job(ctx))
+    .catch((galat) => console.error('[E-Pasar] animasi gagal:', galat))
+    .finally(() => {
+      if (ctx.id === viz.token && vizEl.chip.classList.contains('is-run')) vizChip('Selesai', '');
+    });
+}
+
+/* Keadaan awal (idle): batang bergelombang + petunjuk */
+function vizIdle() {
+  const n = 27;
+  let html = '<div class="vbars">';
+  for (let i = 0; i < n; i++) {
+    const tinggi = 30 + 48 * Math.abs(Math.sin(i * 0.55));
+    html += '<div class="vb is-idle" style="left:' + (i * 100 / n) + '%;width:' + (100 / n) + '%;--i:' + i + '">' +
+            '<div class="vb__fill" style="height:' + tinggi.toFixed(0) + '%"></div></div>';
+  }
+  html += '</div><div class="viz__idle-teks"><span>Ubah <b>Urutkan</b>, tekan <b>Enter</b> di pencarian, pilih <b>kategori</b>, ' +
+          'atau klik <b>Demo Pointer</b> / <b>Binary Search</b> — prosesnya digambar di sini.</span></div>';
+  vizEl.stage.innerHTML = html;
+  vizEl.legend.innerHTML = '';
+  vizChip('Siap', '');
+}
+
+/* Kontrol panel */
+document.getElementById('vizKecepatan').addEventListener('change', (e) => { viz.kecepatan = Number(e.target.value) || 1; });
+document.getElementById('btnUlangViz').addEventListener('click', () => { if (viz.terakhir) viz.terakhir(); });
+document.getElementById('btnLewatiViz').addEventListener('click', () => { viz.skip = true; });
+
+/* Legenda warna tiap mode */
+const lg = (warna, teks) => '<span><i style="background:' + warna + '"></i>' + teks + '</span>';
+const LEGENDA = {
+  sorting: lg('#4f8f5a', 'Belum urut') + lg('#ffe08a', 'Dibandingkan') + lg('#1e88e5', 'Pivot') + lg('#e5532d', 'Ditukar') + lg('#7bf58f', 'Posisi final') +
+           '<span style="opacity:.8">Ilustrasi Quick Sort — aplikasi sebenarnya memakai Array.sort() (TimSort).</span>',
+  sequential: lg('#ffe08a', 'Sedang dicek') + lg('#7bf58f', 'Cocok') + lg('#6b7a6e', 'Tidak cocok'),
+  binary: lg('#ffe08a', 'Titik tengah') + lg('#7fd4ff', 'L = batas kiri') + lg('#ffb37a', 'R = batas kanan') + lg('#4a554c', 'Dibuang') + lg('#7bf58f', 'Ditemukan'),
+  filter: lg('#7bf58f', 'Lolos filter') + lg('#4a554c', 'Tersingkir'),
+  pointer: lg('#8fd8ff', 'Referensi (penunjuk)') + lg('#7bf58f', 'Object asli') + lg('#ffe08a', 'Salinan')
+};
+
+/* ==========================================================================
+   B. ANIMASI SORTING — batang bertukar tempat (ilustrasi Quick Sort)
+   ========================================================================== */
+
+/* Merekam langkah quick sort (pivot tengah) pada salinan array.
+   Langkah: pivot / cmp (bandingkan) / swap (tukar) / fix (posisi final). */
+function vizRekamQuickSort(items, cmp) {
+  const a = items.slice();
+  const langkah = [];
+  const tukar = (i, j) => {
+    if (i === j) return;
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+    langkah.push({ t: 'swap', i: i, j: j });
+  };
+  const qs = (lo, hi) => {
+    if (lo > hi) return;
+    if (lo === hi) { langkah.push({ t: 'fix', i: lo }); return; }
+    tukar((lo + hi) >> 1, hi);                 // pivot tengah → pindah ke ujung
+    const pivot = a[hi];
+    langkah.push({ t: 'pivot', i: hi });
+    let batas = lo;
+    for (let j = lo; j < hi; j++) {
+      langkah.push({ t: 'cmp', i: j });
+      if (cmp(a[j], pivot) < 0) { tukar(batas, j); batas++; }
+    }
+    tukar(batas, hi);
+    langkah.push({ t: 'fix', i: batas });
+    qs(lo, batas - 1);
+    qs(batas + 1, hi);
+  };
+  qs(0, a.length - 1);
+  return { langkah: langkah, hasil: a };
+}
+
+/* Tinggi batang (0.12 – 0.88) menurut kunci pengurutan */
+function vizTinggi(data, opsi) {
+  const peta = new Map();
+  const skala = (v, lo, hi) => (hi === lo ? 0.5 : (v - lo) / (hi - lo));
+  const n = data.length;
+  if (opsi.indexOf('harga') === 0) {
+    const ln = data.map((p) => Math.log(p.harga));
+    const lo = Math.min.apply(null, ln), hi = Math.max.apply(null, ln);   // skala log agar harga murah tetap terlihat
+    data.forEach((p) => peta.set(p.id, 0.12 + 0.76 * skala(Math.log(p.harga), lo, hi)));
+  } else if (opsi.indexOf('rating') === 0) {
+    const r = data.map((p) => p.rating);
+    const lo = Math.min.apply(null, r), hi = Math.max.apply(null, r);
+    data.forEach((p) => peta.set(p.id, 0.12 + 0.76 * skala(p.rating, lo, hi)));
+  } else {
+    const urut = data.slice().sort((a, b) => bandingkanNama(a.nama, b.nama));   // tinggi = peringkat alfabet
+    urut.forEach((p, i) => peta.set(p.id, 0.12 + 0.76 * (n > 1 ? i / (n - 1) : 0.5)));
+  }
+  return peta;
+}
+
+function vizInfoNilai(p, opsi) {
+  if (opsi.indexOf('harga') === 0) return formatRupiah(p.harga);
+  if (opsi.indexOf('rating') === 0) return 'rating ' + p.rating.toFixed(1);
+  return p.nama;
+}
+
+function vizSorting(daftar, opsi) {
+  const kmp = KOMPARATOR[opsi];
+  if (!kmp) return;
+  const data = daftar.slice();
+  const judul = (LABEL_URUTAN[opsi] || opsi).split(' (')[0];
+
+  vizJalankan(judul, LEGENDA.sorting, async (ctx) => {
+    if (data.length < 2) {
+      vizChip('Data < 2', 'warn');
+      vizCaption('Hanya ' + data.length + ' produk — tidak ada yang perlu diurutkan.');
+      return;
+    }
+    const n = data.length;
+    const tinggi = vizTinggi(data, opsi);
+    vizEl.stage.innerHTML = '<div class="vbars"></div>';
+    const wadah = vizEl.stage.firstChild;
+
+    // 1) Bangun batang (tumbuh bergantian dari kiri ke kanan)
+    const slot = [];
+    data.forEach((p, i) => {
+      const bar = document.createElement('div');
+      bar.className = 'vb';
+      bar.style.width = (100 / n) + '%';
+      bar.style.left = (i * 100 / n) + '%';
+      bar.style.setProperty('--i', i);
+      bar.dataset.nama = p.nama;
+      bar.title = p.nama + ' — ' + vizInfoNilai(p, opsi);
+      bar.innerHTML = '<div class="vb__fill" style="height:0%;transition-delay:' + (i * 18) + 'ms"><span class="vb__e">' + p.emoji + '</span></div>';
+      wadah.appendChild(bar);
+      slot.push(bar);
+    });
+    void wadah.offsetWidth;                                   // paksa layout agar transisi tinggi berjalan
+    data.forEach((p, i) => { slot[i].firstChild.style.height = (tinggi.get(p.id) * 100).toFixed(1) + '%'; });
+    vizCaption('Menyusun ' + n + ' batang • tinggi mewakili ' + (opsi.indexOf('nama') === 0 ? 'peringkat abjad' : (opsi.indexOf('harga') === 0 ? 'harga (skala log)' : 'rating')));
+    if (!(await vizTunggu(ctx, n * 18 + 600))) return;
+    slot.forEach((b) => { b.firstChild.style.transitionDelay = '0ms'; });
+
+    // 2) Rekam langkah, lalu putar ulang dengan animasi
+    const rekaman = vizRekamQuickSort(data, kmp);
+    const langkah = rekaman.langkah;
+    const jeda = jepit(4200 / langkah.length, 22, 90);
+    let jmlCmp = 0, jmlSwap = 0, bar = null, bersih = [], pivotBar = null;
+    const lepasAktif = () => { bersih.forEach((b) => b.classList.remove('is-cmp', 'is-swap')); bersih = []; };
+    const taruh = (b, idx) => { b.style.left = (idx * 100 / n) + '%'; };
+
+    for (let s = 0; s < langkah.length; s++) {
+      const st = langkah[s];
+      lepasAktif();
+      if (st.t === 'pivot') {
+        if (pivotBar) pivotBar.classList.remove('is-pivot');
+        pivotBar = slot[st.i];
+        pivotBar.classList.add('is-pivot');
+        vizCaption('Pivot: "' + potongNama(pivotBar.dataset.nama) + '"');
+        if (!(await vizTunggu(ctx, jeda * 1.6))) return;
+      } else if (st.t === 'cmp') {
+        bar = slot[st.i];
+        bar.classList.add('is-cmp'); bersih.push(bar);
+        jmlCmp++;
+        vizCaption('Bandingkan "' + potongNama(bar.dataset.nama) + '" ⇄ pivot');
+        vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' pertukaran');
+        if (!(await vizTunggu(ctx, jeda))) return;
+      } else if (st.t === 'swap') {
+        const a = slot[st.i], b = slot[st.j];
+        slot[st.i] = b; slot[st.j] = a;
+        taruh(b, st.i); taruh(a, st.j);
+        a.classList.add('is-swap'); b.classList.add('is-swap'); bersih.push(a, b);
+        jmlSwap++;
+        vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' pertukaran');
+        if (!(await vizTunggu(ctx, jeda * 1.9))) return;
+      } else if (st.t === 'fix') {
+        const f = slot[st.i];
+        f.classList.remove('is-pivot'); f.classList.add('is-placed');
+        if (f === pivotBar) pivotBar = null;
+      }
+      vizProg((s + 1) / langkah.length * 100);
+    }
+    lepasAktif();
+
+    // 3) Selesai: gelombang cahaya menyapu semua batang
+    slot.forEach((b) => { b.classList.remove('is-pivot'); b.classList.add('is-placed', 'is-done'); });
+    vizProg(100);
+    vizChip('Terurut ✔', '');
+    vizStat(jmlCmp + ' perbandingan • ' + jmlSwap + ' pertukaran');
+    vizCaption('Terurut! Urutan sama dengan hasil Array.sort() pada grid produk.');
+  }, 'Animasi sorting berjalan di panel log');
+}
+
+/* ==========================================================================
+   C. ANIMASI SEARCHING & FILTER — sel produk + pemindai (scanner)
+   ========================================================================== */
+
+/* Membuat grid sel (satu sel per produk) + elemen pemindai */
+function vizBuatSel(daftar) {
+  vizEl.stage.innerHTML = '<div class="vcells"></div>';
+  const wadah = vizEl.stage.firstChild;
+  const sel = daftar.map((p, i) => {
+    const c = document.createElement('div');
+    c.className = 'vc';
+    c.title = p.nama;
+    c.innerHTML = '<small>' + i + '</small>' + p.emoji;
+    wadah.appendChild(c);
+    return c;
+  });
+  const scan = document.createElement('div');
+  scan.className = 'vscan';
+  wadah.appendChild(scan);
+  return { wadah: wadah, sel: sel, scan: scan };
+}
+
+function vizScanKe(scan, c) {
+  if (!scan.dataset.siap) {            // posisi pertama: tanpa transisi agar tidak "terbang" dari pojok
+    scan.style.transition = 'none';
+    scan.style.width = c.offsetWidth + 'px'; scan.style.height = c.offsetHeight + 'px';
+    scan.style.transform = 'translate(' + c.offsetLeft + 'px,' + c.offsetTop + 'px)';
+    void scan.offsetWidth;
+    scan.style.transition = '';
+    scan.dataset.siap = '1';
+  }
+  scan.style.width = c.offsetWidth + 'px';
+  scan.style.height = c.offsetHeight + 'px';
+  scan.style.transform = 'translate(' + c.offsetLeft + 'px,' + c.offsetTop + 'px)';
+  scan.style.opacity = '1';
+}
+
+/* Cincin gelombang di sekitar sel yang cocok */
+function vizCincin(wadah, c) {
+  const r = document.createElement('span');
+  r.className = 'vring';
+  r.style.left = (c.offsetLeft + c.offsetWidth / 2) + 'px';
+  r.style.top = (c.offsetTop + c.offsetHeight / 2) + 'px';
+  wadah.appendChild(r);
+  setTimeout(() => r.remove(), 900);
+}
+
+/* --- Sequential search: pemindai menyapu sel satu per satu --- */
+function vizSequential(daftar, kataKunci) {
+  const kunci = String(kataKunci).trim().toLowerCase();
+  if (!kunci) return;
+  const kata = kunci.split(/\s+/);
+  const data = daftar.slice();
+
+  vizJalankan("Sequential Search — '" + kataKunci.trim() + "'", LEGENDA.sequential, async (ctx) => {
+    if (data.length === 0) { vizChip('Data kosong', 'warn'); vizCaption('Tidak ada produk pada kategori ini.'); return; }
+    const m = vizBuatSel(data);
+    const n = data.length;
+    const jeda = jepit(3600 / n, 40, 130);
+    if (!(await vizTunggu(ctx, 350))) return;
+
+    let cocok = 0;
+    for (let i = 0; i < n; i++) {
+      vizScanKe(m.scan, m.sel[i]);
+      m.sel[i].classList.add('is-cek');
+      vizCaption('Cek #' + i + ': "' + potongNama(data[i].nama, 34) + '"');
+      if (!(await vizTunggu(ctx, jeda))) return;
+      const teks = (data[i].nama + ' ' + data[i].kategori).toLowerCase();
+      const ketemu = kata.every((k) => teks.includes(k));
+      m.sel[i].classList.remove('is-cek');
+      if (ketemu) { cocok++; m.sel[i].classList.add('is-hit'); vizCincin(m.wadah, m.sel[i]); }
+      else m.sel[i].classList.add('is-miss');
+      vizStat((i + 1) + '/' + n + ' dicek • ' + cocok + ' cocok');
+      vizProg((i + 1) / n * 100);
+      if (ketemu && !(await vizTunggu(ctx, jeda * 0.8))) return;
+    }
+    m.scan.style.opacity = '0';
+    if (cocok > 0) {
+      m.sel.forEach((c) => { if (c.classList.contains('is-hit')) c.classList.add('is-final'); });
+      vizChip('Found ' + cocok + ' ✔', '');
+      vizCaption('Selesai • ' + n + ' perbandingan (semua data diperiksa satu per satu).');
+    } else {
+      m.sel.forEach((c, i) => { c.style.animationDelay = (i * 12) + 'ms'; c.classList.add('is-getar'); });
+      vizChip('Tidak ditemukan', 'warn');
+      vizCaption('Tidak ada produk yang cocok dengan "' + kataKunci.trim() + '".');
+    }
+  }, 'Animasi searching berjalan di panel log');
+}
+
+/* --- Binary search: data diurutkan dulu, lalu ruang pencarian dibelah dua --- */
+function vizBinary(daftar, kataKunci) {
+  const kunci = String(kataKunci).trim();
+  const awal = daftar.slice();
+
+  vizJalankan("Binary Search — '" + kunci + "'", LEGENDA.binary, async (ctx) => {
+    if (awal.length === 0) { vizChip('Data kosong', 'warn'); return; }
+    const data = awal.slice().sort((a, b) => bandingkanNama(a.nama, b.nama));
+    const n = data.length;
+    const m = vizBuatSel(awal);
+    const petaSel = new Map();
+    awal.forEach((p, i) => petaSel.set(p.id, m.sel[i]));
+    if (!(await vizTunggu(ctx, 500))) return;
+
+    // Tahap 0: syarat binary search = data terurut → sel meluncur ke posisi A–Z (teknik FLIP)
+    vizCaption('Syarat binary search: data harus terurut → mengurutkan nama A–Z ...');
+    const lama = m.sel.map((c) => c.getBoundingClientRect());
+    const sel = data.map((p) => petaSel.get(p.id));
+    sel.forEach((c) => m.wadah.insertBefore(c, m.scan));
+    sel.forEach((c, i) => {
+      const b = c.getBoundingClientRect();
+      const a = lama[m.sel.indexOf(c)];
+      animasi(c, [{ transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px)' }, { transform: 'none' }],
+              { duration: 850 / viz.kecepatan, easing: 'cubic-bezier(.3,.9,.3,1)', delay: i * 12 / viz.kecepatan });
+      c.querySelector('small').textContent = i;
+    });
+    if (!(await vizTunggu(ctx, 1300))) return;
+
+    // Tahap 1: pembelahan ruang pencarian
+    m.scan.classList.add('is-lompat');
+    let kiri = 0, kanan = n - 1, langkah = 0, ketemu = -1;
+    const tandai = () => {
+      sel.forEach((c) => c.classList.remove('m-L', 'm-R'));
+      if (kiri <= kanan) { sel[kiri].classList.add('m-L'); sel[kanan].classList.add('m-R'); }
+    };
+    const buang = (dari, sampai) => { for (let k = dari; k <= sampai; k++) sel[k].classList.add('is-out'); };
+    const jeda = 1000;
+
+    while (kiri <= kanan) {
+      langkah++;
+      tandai();
+      const tengah = Math.floor((kiri + kanan) / 2);
+      const banding = bandingkanNama(data[tengah].nama, kunci);
+      vizScanKe(m.scan, sel[tengah]);
+      sel[tengah].classList.add('is-cek');
+      vizCaption('Langkah ' + langkah + ': kiri=' + kiri + ' • kanan=' + kanan + ' • tengah=' + tengah + ' → "' + potongNama(data[tengah].nama, 30) + '"');
+      vizStat(langkah + ' perbandingan • sisa ' + (kanan - kiri + 1) + ' data');
+      vizProg(Math.min(95, langkah / Math.ceil(Math.log2(n + 1)) * 100));
+      if (!(await vizTunggu(ctx, jeda))) return;
+
+      sel[tengah].classList.remove('is-cek');
+      if (banding === 0) { ketemu = tengah; break; }
+      if (banding < 0) {                        // data tengah < kunci → buang paruh kiri
+        vizCaption('Langkah ' + langkah + ': kunci > data → buang paruh KIRI (geser batas kiri)');
+        buang(kiri, tengah); kiri = tengah + 1;
+      } else {                                  // data tengah > kunci → buang paruh kanan
+        vizCaption('Langkah ' + langkah + ': kunci < data → buang paruh KANAN (geser batas kanan)');
+        buang(tengah, kanan); kanan = tengah - 1;
+      }
+      tandai();
+      if (!(await vizTunggu(ctx, 700))) return;
+    }
+
+    vizProg(100);
+    if (ketemu >= 0) {
+      sel.forEach((c, i) => { if (i !== ketemu) c.classList.add('is-out'); });
+      sel[ketemu].classList.remove('is-out');
+      sel[ketemu].classList.add('is-hit', 'is-final');
+      vizCincin(m.wadah, sel[ketemu]);
+      m.scan.style.opacity = '0';
+      vizChip('Found 1 ✔', '');
+      vizStat(langkah + ' perbandingan dari ' + n + ' data');
+      vizCaption('Ditemukan di indeks ' + ketemu + ' hanya dalam ' + langkah + ' langkah (sequential search bisa sampai ' + n + ').');
+    } else {
+      m.scan.style.opacity = '0';
+      sel.forEach((c, i) => { c.style.animationDelay = (i * 10) + 'ms'; c.classList.add('is-getar'); });
+      vizChip('Tidak ditemukan', 'warn');
+      vizStat(langkah + ' perbandingan dari ' + n + ' data');
+      vizCaption('Ruang pencarian habis — binary search hanya menemukan nama yang persis sama.');
+    }
+  }, 'Animasi binary search berjalan di panel log');
+}
+
+/* --- Filter kategori: sel yang tidak lolos "jatuh" bergelombang --- */
+function vizFilter(kategori) {
+  const data = daftarProduk.slice();
+  vizJalankan('Filter kategori — ' + kategori, LEGENDA.filter, async (ctx) => {
+    const m = vizBuatSel(data);
+    m.scan.remove();
+    const n = data.length;
+    if (!(await vizTunggu(ctx, 350))) return;
+    let lolos = 0;
+    for (let i = 0; i < n; i++) {
+      const ok = kategori === 'Semua' || data[i].kategori === kategori;
+      if (ok) { lolos++; m.sel[i].classList.add('is-hit'); }
+      else m.sel[i].classList.add('is-out');
+      vizStat((i + 1) + '/' + n + ' diperiksa • ' + lolos + ' lolos');
+      vizProg((i + 1) / n * 100);
+      if (!(await vizTunggu(ctx, 38))) return;
+    }
+    vizChip(lolos + ' produk ✔', '');
+    vizCaption('Filter "' + kategori + '" → ' + lolos + ' dari ' + n + ' produk ditampilkan.');
+  }, 'Animasi filter berjalan di panel log');
+}
+
+/* ==========================================================================
+   D. ANIMASI POINTER — penunjuk menunjuk object yang sama, salinan terpisah
+   ========================================================================== */
+function vizPointer() {
+  vizJalankan('Pointer / Reference', LEGENDA.pointer, async (ctx) => {
+    vizEl.stage.innerHTML =
+      '<div class="vp">' +
+        '<div class="vp__ptr" data-k="ptr">penunjuk<small>→ @0xA1</small></div>' +
+        '<div class="vp__arrow" data-k="panah"></div>' +
+        '<div class="vp__box" data-k="asli"><b>objekAsli</b>{ stok: <em data-k="asliN">10</em> }<small>@0xA1</small></div>' +
+        '<div class="vp__box vp__box--salin" data-k="salin"><b>salinan = {...objekAsli}</b>{ stok: <em data-k="salinN">7</em> }<small>@0xB7</small></div>' +
+      '</div>';
+    const q = (k) => vizEl.stage.querySelector('[data-k="' + k + '"]');
+    const ptr = q('ptr'), panah = q('panah'), asli = q('asli'), salin = q('salin'), asliN = q('asliN'), salinN = q('salinN');
+    const kilat = (box) => { box.classList.add('is-flash'); setTimeout(() => box.classList.remove('is-flash'), 650); };
+    const gulung = (angkaEl, nilai) => {
+      angkaEl.textContent = nilai;
+      angkaEl.classList.remove('is-roll'); void angkaEl.offsetWidth; angkaEl.classList.add('is-roll');
+    };
+    const langkahKe = (n) => vizProg(n / 6 * 100);
+
+    await vizTunggu(ctx, 100);
+    vizCaption('const objekAsli = { stok: 10 }  → object dibuat di memori (@0xA1)');
+    asli.classList.add('is-in'); langkahKe(1);
+    if (!(await vizTunggu(ctx, 1100))) return;
+
+    vizCaption('const penunjuk = objekAsli  → yang disalin hanya ALAMAT (@0xA1), bukan datanya');
+    ptr.classList.add('is-in'); panah.classList.add('is-in'); langkahKe(2);
+    if (!(await vizTunggu(ctx, 1300))) return;
+
+    vizCaption('penunjuk.stok = 7  → diubah lewat penunjuk, tetapi yang berubah object asli');
+    kilat(ptr); panah.classList.add('is-denyut');
+    if (!(await vizTunggu(ctx, 450))) return;
+    gulung(asliN, 7); kilat(asli); langkahKe(3);
+    if (!(await vizTunggu(ctx, 1300))) return;
+    panah.classList.remove('is-denyut');
+
+    vizCaption('const salinan = { ...objekAsli }  → object BARU di alamat lain (@0xB7)');
+    salin.classList.add('is-in'); langkahKe(4);
+    if (!(await vizTunggu(ctx, 1200))) return;
+
+    vizCaption('salinan.stok = 3  → hanya salinan yang berubah, objekAsli.stok tetap 7');
+    gulung(salinN, 3); kilat(salin); langkahKe(5);
+    if (!(await vizTunggu(ctx, 1200))) return;
+
+    langkahKe(6);
+    vizChip('by reference ✔', '');
+    vizStat('referensi = 1 object • salinan = object baru');
+    vizCaption('Kesimpulan: menunjuk object yang sama (pointer) ≠ menyalin object (spread).');
+  }, 'Animasi pointer berjalan di panel log');
+}
+
+/* ==========================================================================
+   E. ANIMASI KARTU PRODUK (FLIP), TERBANG KE KERANJANG, KONFETI
+   ========================================================================== */
+
+/* Catat posisi kartu SEBELUM grid dirender ulang */
+function animPosisiKartu(grid) {
+  const peta = new Map();
+  grid.querySelectorAll('.card[data-id]').forEach((k) => peta.set(k.dataset.id, k.getBoundingClientRect()));
+  return peta;
+}
+
+/* Setelah render: kartu lama meluncur ke posisi baru (FLIP), kartu baru muncul bertahap.
+   efek 'urut' → lencana peringkat • efek 'cari' → kilau hijau pada kartu yang cocok */
+function animKartuSetelahRender(grid, posisiLama, efek) {
+  const kartu = Array.from(grid.querySelectorAll('.card[data-id]'));
+  let urutanBaru = 0;
+  kartu.forEach((k, i) => {
+    const lama = posisiLama.get(k.dataset.id);
+    if (lama) {
+      const b = k.getBoundingClientRect();
+      const dx = lama.left - b.left, dy = lama.top - b.top;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        animasi(k, [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
+                { duration: 520, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    } else {
+      animasi(k, [{ opacity: 0, transform: 'translateY(16px) scale(.96)' }, { opacity: 1, transform: 'none' }],
+              { duration: 440, easing: 'cubic-bezier(.2,.8,.2,1)', delay: Math.min(urutanBaru, 24) * 24, fill: 'backwards' });
+      urutanBaru++;
+    }
+    if (efek === 'urut' && !KURANGI_GERAK) {
+      const lencana = document.createElement('span');
+      lencana.className = 'card__rank';
+      lencana.textContent = '#' + (i + 1);
+      lencana.style.animationDelay = Math.min(i, 24) * 30 + 'ms';
+      lencana.addEventListener('animationend', () => lencana.remove());
+      k.appendChild(lencana);
+    }
+    if (efek === 'cari' && !KURANGI_GERAK) {
+      k.classList.add('is-cocok');
+      setTimeout(() => k.classList.remove('is-cocok'), 1400);
+    }
+  });
+}
+
+/* Getar kecil pada tombol keranjang + lompatan badge */
+function animBumpKeranjang() {
+  const tombol = document.getElementById('btnKeranjang');
+  const badge = document.getElementById('badgeKeranjang');
+  [[tombol, 'goyang'], [badge, 'bump']].forEach((p) => {
+    p[0].classList.remove(p[1]); void p[0].offsetWidth; p[0].classList.add(p[1]);
+    setTimeout(() => p[0].classList.remove(p[1]), 650);
+  });
+}
+
+/* Emoji produk terbang melengkung menuju ikon keranjang */
+function animTerbang(sumberEl, emoji) {
+  if (!bisaAnimasi || KURANGI_GERAK || !sumberEl) { animBumpKeranjang(); return; }
+  const a = sumberEl.getBoundingClientRect();
+  const t = document.getElementById('btnKeranjang').getBoundingClientRect();
+  const x0 = a.left + a.width / 2 - 15, y0 = a.top + a.height / 2 - 15;
+  const x1 = t.left + t.width / 2 - 15, y1 = t.top + t.height / 2 - 15;
+  const xm = (x0 + x1) / 2, ym = Math.min(y0, y1) - 90;
+  const bola = document.createElement('span');
+  bola.className = 'terbang';
+  bola.textContent = emoji || '🛍️';
+  document.body.appendChild(bola);
+  const anim = bola.animate([
+    { transform: 'translate(' + x0 + 'px,' + y0 + 'px) scale(1) rotate(0deg)', opacity: 1 },
+    { transform: 'translate(' + xm + 'px,' + ym + 'px) scale(1.3) rotate(150deg)', opacity: 1, offset: 0.45 },
+    { transform: 'translate(' + x1 + 'px,' + y1 + 'px) scale(.25) rotate(330deg)', opacity: 0.7 }
+  ], { duration: 780, easing: 'cubic-bezier(.45,.05,.55,.95)' });
+  anim.onfinish = () => { bola.remove(); animBumpKeranjang(); };
+}
+
+/* Ledakan konfeti saat checkout berhasil */
+function animKonfeti() {
+  if (!bisaAnimasi || KURANGI_GERAK) return;
+  const warna = ['#03ac0e', '#7bf58f', '#ffb400', '#1e88e5', '#e53935', '#c084fc'];
+  const x0 = window.innerWidth / 2, y0 = window.innerHeight * 0.55;
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('span');
+    p.className = 'konfeti';
+    const lebar = 6 + Math.random() * 6;
+    p.style.cssText = 'width:' + lebar + 'px;height:' + (lebar * 1.6) + 'px;background:' + warna[i % warna.length] + ';border-radius:' + (i % 3 === 0 ? '50%' : '2px');
+    document.body.appendChild(p);
+    const sudut = (Math.random() * 160 + 10) * Math.PI / 180;
+    const jarak = 120 + Math.random() * 220;
+    const dx = Math.cos(sudut) * jarak, dyAtas = -Math.sin(sudut) * jarak;
+    const putar = (Math.random() - 0.5) * 900;
+    const anim = p.animate([
+      { transform: 'translate(' + x0 + 'px,' + y0 + 'px) rotate(0deg)', opacity: 1 },
+      { transform: 'translate(' + (x0 + dx * 0.7) + 'px,' + (y0 + dyAtas) + 'px) rotate(' + (putar * 0.6) + 'deg)', opacity: 1, offset: 0.4 },
+      { transform: 'translate(' + (x0 + dx) + 'px,' + (y0 + 180 + Math.random() * 160) + 'px) rotate(' + putar + 'deg)', opacity: 0 }
+    ], { duration: 1100 + Math.random() * 700, easing: 'cubic-bezier(.2,.6,.4,1)' });
+    anim.onfinish = () => p.remove();
+  }
+}
+
+vizIdle();
+// ====== AKHIR SCRIPT 1B: MESIN ANIMASI ======
+</script>
+
+<!-- ==========================================================================
      SCRIPT 2 — TAMPILAN (DOM), EVENT LISTENER, DAN INISIALISASI
      ========================================================================== -->
 <script>
@@ -1018,6 +1843,7 @@ const gradienKategori = (kategori) => GRADIEN_KATEGORI[kategori] || 'linear-grad
 function buatKartu(produk) {
   const kartu = document.createElement('article');
   kartu.className = 'card' + (produk.stok === 0 ? ' card--habis' : '');
+  kartu.dataset.id = produk.id;   // dipakai animasi FLIP untuk melacak posisi kartu
 
   // "Gambar" produk: pakai emoji (supaya jalan tanpa internet) atau <img> bila ada gambarUrl
   const media = produk.gambarUrl
@@ -1052,7 +1878,8 @@ function buatKartu(produk) {
 }
 
 /* Render seluruh hasil ke grid (memakai DocumentFragment agar lebih efisien) */
-function renderProduk(data) {
+function renderProduk(data, efek) {
+  const posisiLama = animPosisiKartu(dom.grid);   // ANIMASI: catat posisi kartu sebelum dirender ulang
   dom.grid.innerHTML = '';
   dom.pesanKosong.hidden = data.length > 0;
 
@@ -1060,6 +1887,7 @@ function renderProduk(data) {
   data.forEach((produk) => fragmen.appendChild(buatKartu(produk)));
   dom.grid.appendChild(fragmen);
 
+  animKartuSetelahRender(dom.grid, posisiLama, efek);   // ANIMASI: kartu meluncur / muncul (FLIP)
   renderInfo(data);
 }
 
@@ -1138,21 +1966,26 @@ function perbaruiTampilan(opsi = {}) {
     ? daftarProduk.slice()
     : daftarProduk.filter((produk) => produk.kategori === state.kategori);
 
-  if (logKategori) log('Filter kategori: "' + state.kategori + '" → ' + data.length + ' produk.', 'info');
+  if (logKategori) {
+    log('Filter kategori: "' + state.kategori + '" → ' + data.length + ' produk.', 'info');
+    vizFilter(state.kategori);                       // ANIMASI: sel yang tidak lolos "jatuh" bergelombang
+  }
 
   // b) Searching berdasarkan nama (sequential search)
   if (state.kataKunci.trim() !== '') {
+    if (logPencarian) vizSequential(data, state.kataKunci);   // ANIMASI: pemindai menyapu sel satu per satu
     data = cariProdukSequential(data, state.kataKunci, logPencarian);
   } else if (logPencarian) {
     log('Kotak pencarian kosong • menampilkan semua produk kembali.', 'info');
   }
 
   // c) Sorting sesuai pilihan pada dropdown "Urutkan"
+  if (logSorting) vizSorting(data, state.urutan);    // ANIMASI: batang bertukar tempat (data sebelum diurutkan)
   data = urutkanProduk(data, state.urutan, logSorting);
 
   // d) Simpan ke state lalu render ke layar
   state.hasil = data;
-  renderProduk(data);
+  renderProduk(data, logSorting ? 'urut' : (logPencarian ? 'cari' : undefined));
 }
 
 /* ==========================================================================
@@ -1168,8 +2001,11 @@ dom.grid.addEventListener('click', (event) => {
   const produk = cariProdukById(Number(tombol.dataset.id)); // REFERENSI ke object produk asli
   if (!produk) return;
 
+  const kartuAsal = tombol.closest('.card');
   const berhasil = tambahKeKeranjang(keranjang, produk, 1);  // stok dikurangi by reference
   if (berhasil) {
+    // ANIMASI: emoji produk terbang melengkung ke ikon keranjang (posisi diukur sebelum kartu dirender ulang)
+    animTerbang(kartuAsal && (kartuAsal.querySelector('.card__emoji') || kartuAsal.querySelector('.card__media')), produk.emoji);
     toast('"' + produk.nama + '" masuk ke keranjang.', 'keranjang');
     renderKeranjang();
     perbaruiTampilan();          // kartu dirender ulang → stok pada kartu ikut ter-update
@@ -1261,11 +2097,13 @@ dom.btnCheckout.addEventListener('click', () => {
   perbaruiTampilan();
   tutupKeranjang();
   toast('Checkout berhasil • ' + nota.jumlahItem + ' item • ' + formatRupiah(nota.total) + ' (' + nota.nomorNota + ')', 'sukses');
+  animKonfeti();   // ANIMASI: ledakan konfeti
 });
 
 /* j) Tombol "Demo Pointer" → membuktikan object dioper by reference */
 dom.btnDemoPointer.addEventListener('click', () => {
   demoPointer();
+  vizPointer();   // ANIMASI: penunjuk → object yang sama vs salinan
   toast('Bukti pointer/reference sudah ditulis di panel log di bawah ini.');
 });
 
@@ -1283,6 +2121,7 @@ dom.btnBinary.addEventListener('click', () => {
     return;
   }
 
+  vizBinary(daftarProduk, kata);                             // ANIMASI: data terurut, ruang pencarian dibelah dua
   const hasil = cariProdukBinary(daftarProduk, kata, true);  // log otomatis ke panel log
 
   if (hasil.length === 0) {
